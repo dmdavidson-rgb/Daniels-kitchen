@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Daniel's Kitchen</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F0E0C;--surface:#1A1916;--surface2:#222119;--border:#2E2C27;
+  --text:#F0EDE6;--soft:#9B9689;--muted:#5A574F;
+  --gold:#D4A853;--gold-s:rgba(212,168,83,0.12);--gold-b:rgba(212,168,83,0.25);
+  --green:#5A9E6F;--green-s:rgba(90,158,111,0.12);
+  --red:#C05A4A;--red-s:rgba(192,90,74,0.12);
+  --orange:#D4814A;--orange-s:rgba(212,129,74,0.12);
+  --r:14px;--rs:8px;--safe:env(safe-area-inset-bottom,0px);
+  --on-accent:#1C1917;--on-gold:#1C1917;--chk-stroke:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100svh;max-width:480px;margin:0 auto;padding-bottom:calc(80px + var(--safe))}
+
+/* NAV */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(15,14,12,0.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe);z-index:100}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0 8px;cursor:pointer;gap:3px;color:var(--muted);font-size:.62rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;border:none;background:none;transition:color .2s}
+.ni.active{color:var(--gold)}
+.ni svg{width:22px;height:22px;stroke-width:1.5}
+
+/* PAGES */
+.page{display:none;animation:fadeIn .2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* HEADER */
+.ph{padding:52px 20px 16px;border-bottom:1px solid var(--border)}
+.ph h1{font-family:'Lora',serif;font-size:1.85rem;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.ph .sub{color:var(--soft);font-size:.8rem;margin-top:4px;font-weight:300}
+
+/* SEARCH */
+.srch{position:relative;margin:14px 20px 0}
+.srch input{width:100%;padding:10px 14px 10px 36px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s}
+.srch input:focus{border-color:var(--gold)}
+.srch svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);stroke:var(--muted);width:16px;height:16px}
+
+/* FILTER CHIPS */
+.chips{display:flex;gap:6px;padding:12px 20px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:6px 14px;border-radius:20px;font-size:.75rem;font-weight:500;white-space:nowrap;cursor:pointer;border:1.5px solid var(--border);background:none;color:var(--soft);transition:all .15s}
+.chip.active{background:var(--gold);border-color:var(--gold);color:var(--on-accent);font-weight:600}
+
+/* RECIPE GRID */
+.rgrid{padding:0 20px 16px;display:flex;flex-direction:column;gap:8px}
+.rc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:box-shadow .2s}
+.rc-head{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;cursor:pointer;user-select:none}
+.rc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.rc-meta{flex:1;min-width:0}
+.rc-cuisine{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px;opacity:.7}
+.rc-title{font-family:'Lora',serif;font-size:1.1rem;font-weight:700;line-height:1.2}
+.rc-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.rtag{font-size:.62rem;padding:2px 7px;border-radius:20px;background:var(--surface2);color:var(--soft);font-weight:500}
+.rc-arr{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s;margin-top:2px}
+.rc.open .rc-arr{transform:rotate(180deg);background:var(--gold);border-color:var(--gold)}
+.rc.open .rc-arr svg{stroke:var(--on-accent)}
+
+/* RECIPE BODY */
+.rc-body{display:none;border-top:1px solid var(--border);padding:16px}
+.rc.open .rc-body{display:block;animation:fadeIn .2s ease}
+.sl{font-size:.63rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;margin-top:14px}
+.sl:first-child{margin-top:0}
+.ings{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:3px 12px}
+.ings li{font-size:.8rem;color:var(--soft);padding:2px 0;display:flex;align-items:baseline;gap:5px}
+.ings li::before{content:'';width:3px;height:3px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.steps{list-style:none;display:flex;flex-direction:column;gap:10px}
+.step{display:flex;gap:10px;align-items:flex-start}
+.snum{font-family:'DM Mono',monospace;font-size:.68rem;width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--on-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-weight:500}
+.stxt .st{font-size:.8rem;font-weight:600;margin-bottom:2px}
+.stxt .sd{font-size:.78rem;color:var(--soft);line-height:1.5}
+.stxt .stm{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);margin-top:2px}
+.tips-box{background:var(--surface2);border-radius:var(--rs);padding:10px 12px;margin-top:4px}
+.tips-box p{font-size:.77rem;color:var(--soft);line-height:1.5;margin-bottom:4px}
+.tips-box p:last-child{margin-bottom:0}
+.tips-box strong{color:var(--text);font-weight:500}
+.divr{height:1px;background:var(--border);margin:12px 0}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty svg{width:32px;height:32px;margin-bottom:10px;stroke:var(--muted)}
+.empty p{font-size:.83rem}
+
+/* CALENDAR */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
+.cal-nav h2{font-family:'Lora',serif;font-size:1.1rem;font-weight:700}
+.cal-nav button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);background:none;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cal-nav button:active{background:var(--surface2)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 20px 16px}
+.day-hdr{text-align:center;font-size:.6rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:4px 0 8px}
+.day-cell{border-radius:var(--rs);min-height:72px;padding:6px 5px 5px;cursor:pointer;transition:opacity .15s;position:relative;overflow:hidden;border:1px solid transparent}
+.day-cell:active{opacity:.75}
+.day-cell.empty-cell{opacity:.15;cursor:default}
+.day-cell.out-cell{background:rgba(255,255,255,.03)!important}
+.day-num{font-size:.72rem;font-weight:700;line-height:1;margin-bottom:3px}
+.day-label{font-size:.58rem;line-height:1.3;font-weight:500;word-break:break-word}
+.day-note{font-size:.52rem;color:var(--muted);margin-top:2px;line-height:1.3}
+.prep-badge{display:inline-block;font-size:.5rem;font-weight:700;padding:1px 4px;border-radius:3px;background:var(--gold);color:var(--on-accent);margin-top:2px;letter-spacing:.04em}
+.heavy-dot{position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:#C05A4A}
+
+/* CAL LEGEND */
+.cal-legend{display:flex;flex-wrap:wrap;gap:6px 12px;padding:0 20px 12px}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:.62rem;color:var(--soft)}
+.leg-dot{width:7px;height:7px;border-radius:50%}
+
+/* DAY DETAIL MODAL */
+.dd-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.dd-modal.open{display:flex}
+.dd-sheet{background:var(--surface);border-radius:20px 20px 0 0;border-top:1px solid var(--border);width:100%;max-width:480px;max-height:90svh;overflow-y:auto;padding:16px 20px calc(20px + var(--safe));animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.dd-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px}
+.dd-cuisine{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.dd-title{font-family:'Lora',serif;font-size:1.4rem;font-weight:700;margin-bottom:4px}
+.dd-note{font-size:.78rem;color:var(--soft);margin-bottom:14px}
+.dd-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border-radius:var(--r);border:none;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;width:100%;background:var(--gold);color:var(--on-accent);transition:opacity .15s}
+.dd-btn:active{opacity:.85}
+.dd-weekend{margin-top:12px;background:var(--surface2);border-radius:var(--rs);padding:10px 12px}
+.dd-wk-lbl{font-size:.62rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.dd-wk-txt{font-size:.78rem;color:var(--soft);line-height:1.5}
+
+/* KITCHEN TABS */
+.ktabs{display:flex;gap:5px;padding:14px 20px 0;overflow-x:auto;scrollbar-width:none}
+.ktabs::-webkit-scrollbar{display:none}
+.ktab{padding:6px 14px;border-radius:20px;font-size:.75rem;font-weight:500;white-space:nowrap;cursor:pointer;border:1.5px solid var(--border);background:none;color:var(--soft);transition:all .15s}
+.ktab.active{background:var(--gold);border-color:var(--gold);color:var(--on-accent);font-weight:600}
+
+/* KITCHEN SECTIONS */
+.ksection{display:none;padding:14px 20px}
+.ksection.active{display:block;animation:fadeIn .2s ease}
+.sec-lbl{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.kcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+
+/* PANTRY ROW */
+.pr{display:flex;align-items:center;padding:11px 14px;gap:10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.pr:last-child{border-bottom:none}
+.pr:active{background:var(--surface2)}
+.pr-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pr-info{flex:1;min-width:0}
+.pr-name{font-size:.86rem;font-weight:500}
+.pr-meta{font-size:.7rem;color:var(--soft);margin-top:1px}
+.exp-bar{height:2px;border-radius:1px;background:var(--border);margin-top:3px}
+.exp-fill{height:100%;border-radius:1px;transition:width .5s}
+.pr-badge{font-size:.62rem;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.b-in{background:var(--green-s);color:var(--green)}
+.b-low{background:var(--orange-s);color:var(--orange)}
+.b-out{background:var(--red-s);color:var(--red)}
+
+/* SHOPPING */
+.rp{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;border:1.5px solid var(--border);font-size:.72rem;font-weight:500;cursor:pointer;margin:3px;background:none;color:var(--soft);transition:all .15s}
+.rp.sel{border-color:var(--gold);background:var(--gold-s);color:var(--gold)}
+.rp .dot{width:6px;height:6px;border-radius:50%}
+.si{display:flex;align-items:flex-start;padding:10px 14px;gap:10px;border-bottom:1px solid var(--border)}
+.si:last-child{border-bottom:none}
+.si-chk{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-top:1px}
+.si-chk.chkd{background:var(--gold);border-color:var(--gold)}
+.si.chkd-row .si-name{text-decoration:line-through;color:var(--muted)}
+.si-name{font-size:.85rem;font-weight:500}
+.si-sub{font-size:.68rem;color:var(--muted);margin-top:1px}
+
+/* SCAN */
+.scan-zone{border:2px dashed var(--border);border-radius:var(--r);padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
+.scan-zone:active,.scan-zone.drag{border-color:var(--gold);background:var(--gold-s)}
+.scan-zone svg{width:36px;height:36px;stroke:var(--muted);margin-bottom:10px}
+.scan-zone .sz-t{font-size:.95rem;font-weight:600;margin-bottom:3px}
+.scan-zone .sz-s{font-size:.75rem;color:var(--soft)}
+.ri{display:flex;align-items:center;padding:10px 14px;gap:10px;border-bottom:1px solid var(--border)}
+.ri:last-child{border-bottom:none}
+.ri-chk{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .2s}
+.ri-chk.m{background:var(--green);border-color:var(--green)}
+.ri-chk.u{background:var(--orange-s);border-color:var(--orange)}
+.ri-info{flex:1}.ri-n{font-size:.84rem;font-weight:500}.ri-s{font-size:.68rem;color:var(--soft);margin-top:1px}
+.ri-p{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--gold)}
+
+/* SPEND */
+.spend-card{display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px}
+.ring-wrap{position:relative;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-amt{font-family:'DM Mono',monospace;font-size:.9rem;font-weight:500;color:var(--gold);line-height:1}
+.ring-sub{font-size:.52rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.spend-info .sp-t{font-size:.92rem;font-weight:600;margin-bottom:2px}
+.spend-info .sp-s{font-size:.73rem;color:var(--soft)}
+.hist-row{display:flex;align-items:center;padding:11px 14px;gap:10px;border-bottom:1px solid var(--border)}
+.hist-row:last-child{border-bottom:none}
+
+/* EXPIRY BANNER */
+.exp-banner{background:var(--orange-s);border:1px solid rgba(212,129,74,.3);border-radius:var(--r);padding:10px 12px;display:flex;gap:8px;margin-bottom:10px}
+.exp-banner svg{width:16px;height:16px;stroke:var(--orange);flex-shrink:0;margin-top:1px}
+.exp-t{font-size:.78rem;font-weight:600;color:var(--orange)}
+.exp-l{font-size:.72rem;color:var(--soft);margin-top:2px}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border-radius:var(--r);border:none;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .15s;width:100%}
+.btn-primary{background:var(--gold);color:var(--on-accent)}
+.btn-primary:active{opacity:.85;transform:scale(.98)}
+.btn-sec{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-ghost{background:none;color:var(--soft);border:1px solid var(--border)}
+.btn-remind{background:linear-gradient(135deg,#3B82F6,#6366F1);color:#fff;border:none}
+.btn-row{display:flex;gap:8px;margin-top:8px}
+.btn-row .btn{flex:1}
+
+/* MODAL */
+.modal-bd{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:300;display:none;align-items:flex-end;justify-content:center}
+.modal-bd.open{display:flex}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;border-top:1px solid var(--border);width:100%;max-width:480px;max-height:80svh;overflow-y:auto;padding:16px 20px calc(20px + var(--safe));animation:slideUp .25s ease}
+.modal-hnd{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px}
+.modal h2{font-family:'Lora',serif;font-size:1.25rem;margin-bottom:2px}
+.modal .m-sub{font-size:.78rem;color:var(--soft);margin-bottom:14px}
+.mf{margin-bottom:12px}
+.mf label{font-size:.68rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px}
+.mf input,.mf select{width:100%;padding:11px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+.mf input:focus,.mf select:focus{border-color:var(--gold)}
+
+/* LOADING & TOAST */
+.loading{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:400;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.loading.show{display:flex}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-t{font-size:.85rem;color:var(--soft);font-style:italic}
+.toast{position:fixed;bottom:calc(88px + var(--safe));left:50%;transform:translateX(-50%) translateY(8px);background:var(--text);color:var(--on-accent);padding:9px 16px;border-radius:20px;font-size:.8rem;font-weight:600;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:150}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── PRINT STYLES ── */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: #fff !important; color: #111 !important; max-width: 100% !important; padding: 0 !important; }
+  .nav, .ph, .chips, .srch, .ktabs, .dd-modal, .modal-bd, .loading, .toast,
+  #p-recipes, #p-kitchen, .cal-nav, .print-btn-wrap { display: none !important; }
+  #p-calendar { display: block !important; }
+  .print-hdr { display: block !important; text-align: center; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 2px solid #111; }
+  .print-hdr h1 { font-family: 'Lora', serif; font-size: 18pt; font-weight: 700; color: #111; margin-bottom: 2px; }
+  .print-hdr p { font-size: 8pt; color: #666; }
+  .cal-legend { padding: 4px 0 8px !important; gap: 4px 12px !important; }
+  .leg-item { font-size: 7pt !important; color: #444 !important; }
+  .leg-dot { width: 7px !important; height: 7px !important; }
+  .cal-grid { display: grid !important; grid-template-columns: repeat(7, 1fr) !important; gap: 2px !important; padding: 0 !important; }
+  .day-hdr { color: #444 !important; font-size: 7.5pt !important; text-align: center; padding: 3px 0 5px; border-bottom: 1px solid #bbb; }
+  .day-cell { border: 1px solid #ccc !important; border-radius: 3px !important; min-height: 78px !important; padding: 5px 4px 4px !important; page-break-inside: avoid; }
+  .day-cell.empty-cell { opacity: 0.12 !important; }
+  .day-cell.out-cell { background: #f5f5f5 !important; }
+  .day-num { font-size: 8.5pt !important; font-weight: 700 !important; color: #222 !important; }
+  .day-label { font-size: 6.8pt !important; color: #111 !important; line-height: 1.3 !important; margin-top: 2px !important; font-weight: 500 !important; }
+  .day-note { display: none !important; }
+  .prep-badge { font-size: 5.5pt !important; padding: 1px 3px !important; border-radius: 2px !important; font-weight: 700 !important; }
+  .heavy-dot { width: 5px !important; height: 5px !important; top: 3px !important; right: 3px !important; }
+  @page { size: landscape; margin: 0.8cm; }
+}
+.print-hdr { display: none; }
+.print-btn-wrap { padding: 10px 20px 0; }
+
+/* ── SHOPPING SLIDER ── */
+.shop-slider-wrap{padding:0 0 14px;}
+.shop-slider-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.shop-slider-label .sl-title{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.shop-slider-label .sl-range{font-size:.75rem;color:var(--gold);font-weight:600;}
+.shop-slider-date{font-size:.8rem;color:var(--soft);margin-top:6px;display:flex;align-items:center;gap:6px;}
+.shop-slider-date svg{width:13px;height:13px;stroke:var(--gold);flex-shrink:0;}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--border);outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--gold);cursor:pointer;box-shadow:0 0 0 3px rgba(212,168,83,.2);}
+/* SKIP button on day modal */
+.dd-skip-btn{display:none;width:100%;padding:10px;border-radius:var(--rs);border:1.5px solid var(--border);background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.78rem;cursor:pointer;text-align:center;margin-top:8px;transition:all .15s;}
+.dd-skip-btn:active{background:var(--surface2);}
+.dd-skip-btn.skipped{color:var(--red);border-color:var(--red);background:var(--red-s);}
+/* Compound ingredient tag */
+.ing-compound{display:inline-block;font-size:.58rem;padding:1px 5px;border-radius:3px;background:rgba(212,168,83,.15);color:var(--gold);font-weight:600;margin-left:4px;vertical-align:middle;}
+
+/* ── APP HEADER ── */
+.app-header{
+  position:fixed;top:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;
+  background:rgba(15,14,12,0.96);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  z-index:90;
+  display:flex;align-items:center;justify-content:center;
+  padding:10px 20px 8px;
+  padding-top:calc(10px + env(safe-area-inset-top,0px));
+}
+
+.app-header-title{
+  font-family:'Lora',serif;
+  font-size:1.5rem;
+  font-weight:700;
+  letter-spacing:-.02em;
+  background:linear-gradient(135deg,var(--gold) 0%,#F0D090 50%,var(--gold) 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  white-space:nowrap;
+  text-align:center;
+}
+.app-header-sub{
+  font-size:.58rem;
+  color:var(--muted);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  font-weight:500;
+  text-align:center;
+  line-height:1;
+  margin-top:1px;
+}
+/* Push page content down to account for fixed header */
+.page{padding-top:calc(62px + env(safe-area-inset-top,0px));}
+.ph{padding-top:12px;}
+@media print{.app-header{display:none!important;}}
+
+/* ── LIGHT THEME ── */
+body.light{
+  --bg:#F7F4EE;--surface:#FFFFFF;--surface2:#F0EDE6;--border:#E0DDD6;
+  --text:#1C1917;--soft:#57534E;--muted:#A8A29E;
+  --gold:#B8860B;--gold-s:rgba(184,134,11,0.1);--gold-b:rgba(184,134,11,0.2);
+  --green:#3D7A52;--green-s:rgba(61,122,82,0.1);
+  --red:#A0392A;--red-s:rgba(160,57,42,0.1);
+  --orange:#B5611A;--orange-s:rgba(181,97,26,0.1);
+  --on-accent:#FFFFFF;--on-gold:#FFFFFF;--chk-stroke:#FFFFFF;
+}
+body.light .app-header{background:rgba(247,244,238,0.96);}
+body.light .nav{background:rgba(247,244,238,0.96);}
+body.light .ni{color:#A8A29E;}
+body.light .ni.active{color:var(--gold);}
+body.light .snum{color:#FFFFFF!important;}
+body.light .prep-badge{color:#FFFFFF!important;}
+body.light .chip.active{color:#FFFFFF!important;}
+body.light .ktab.active{color:#FFFFFF!important;}
+body.light .btn-primary{color:#FFFFFF!important;}
+body.light .rc-arr svg{stroke:#1C1917;}
+body.light .rc.open .rc-arr{background:var(--gold);}
+body.light .rc.open .rc-arr svg{stroke:#FFFFFF!important;}
+body.light .app-header-title{
+  background:linear-gradient(135deg,#B8860B 0%,#D4A853 50%,#B8860B 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+body.light .day-cell{border-color:#D0CCC4!important;}
+body.light input[type=range]{background:#D0CCC4;}
+body.light .rc{border-color:#E0DDD6;}
+body.light .modal{background:#FFFFFF;}
+body.light .dd-sheet{background:#FFFFFF;}
+/* Theme toggle button */
+.theme-toggle{
+  position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  width:32px;height:32px;border-radius:50%;
+  border:1.5px solid var(--border);background:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;color:var(--soft);
+  padding-top:calc(env(safe-area-inset-top,0px) / 2);
+}
+.theme-toggle:active{background:var(--surface2);}
+</style>
+</head>
+<body>
+
+<header class="app-header" style="position:relative;">
+  <div>
+    <div class="app-header-title">Daniel's Kitchen</div>
+    <div class="app-header-sub">Recipes · Calendar · Pantry</div>
+  </div>
+  <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark">
+    <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  </button>
+</header>
+
+<!-- ══ RECIPES PAGE ══ -->
+<div class="page active" id="p-recipes">
+  <div class="ph"><h1>Recipes</h1><div class="sub" id="r-count">26 recipes across 7 cuisines</div></div>
+  <div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" id="r-search" placeholder="Search recipes, tags, cuisine..." oninput="filterRecipes()"></div>
+  <div class="chips" id="r-chips"></div>
+  <div class="rgrid" id="r-grid"></div>
+</div>
+
+<!-- ══ CALENDAR PAGE ══ -->
+<div class="page" id="p-calendar">
+  <div class="print-hdr" id="print-hdr">
+    <h1>Daniel's Themed Cuisine Calendar</h1>
+    <p id="print-hdr-sub">May – June 2026 · Ingredient-Optimized Rotation · No garlic · No cilantro · Dairy spread out</p>
+  </div>
+  <div class="ph"><h1>Calendar</h1><div class="sub">Tap any meal to see the full recipe</div></div>
+  <div class="cal-nav">
+    <button onclick="calPrev()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h2 id="cal-month-label">May 2026</h2>
+    <button onclick="calNext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+  </div>
+  <div class="cal-legend" id="cal-legend"></div>
+  <div class="cal-grid" id="cal-grid"></div>
+  <div class="print-btn-wrap">
+    <button class="btn btn-sec" onclick="printCal()" style="gap:8px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Print / Save as PDF
+    </button>
+  </div>
+</div>
+
+<!-- ══ KITCHEN PAGE ══ -->
+<div class="page" id="p-kitchen">
+  <div class="ph"><h1>Kitchen</h1><div class="sub" id="k-sub">Pantry · Shopping · Scanner · Spend</div></div>
+  <div class="ktabs">
+    <button class="ktab active" onclick="setKTab('pantry',this)">Pantry</button>
+    <button class="ktab" onclick="setKTab('shopping',this)">Shopping</button>
+    <button class="ktab" onclick="setKTab('scanner',this)">Scan Receipt</button>
+    <button class="ktab" onclick="setKTab('spend',this)">Spend</button>
+  </div>
+
+  <!-- PANTRY -->
+  <div class="ksection active" id="ks-pantry">
+    <div id="exp-banner" style="display:none" class="exp-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div><div class="exp-t">Expiring Soon</div><div class="exp-l" id="exp-list"></div></div>
+    </div>
+    <div class="chips" id="p-chips" style="padding:0 0 10px;">
+      <button class="chip active" onclick="setPFilter('all',this)">All</button>
+      <button class="chip" onclick="setPFilter('in',this)">In Stock</button>
+      <button class="chip" onclick="setPFilter('low',this)">Low</button>
+      <button class="chip" onclick="setPFilter('out',this)">Out</button>
+    </div>
+    <div class="kcard" id="pantry-list"></div>
+    <div style="margin-top:10px"><button class="btn btn-sec" onclick="openModal('m-add')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Item Manually</button></div>
+  </div>
+
+  <!-- SHOPPING -->
+  <div class="ksection" id="ks-shopping">
+    <div class="shop-slider-wrap">
+      <div class="shop-slider-label">
+        <span class="sl-title">Shopping Window</span>
+        <span class="sl-range" id="sl-days-label">7 days</span>
+      </div>
+      <input type="range" id="shop-days-slider" min="1" max="31" value="7" oninput="updateShopSlider()">
+      <div class="shop-slider-date">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+        <span id="sl-date-range">Getting groceries for today → loading...</span>
+      </div>
+    </div>
+    <div class="sec-lbl" style="margin-bottom:6px;">Recipes in window <span id="auto-sel-note" style="color:var(--gold);font-weight:400;text-transform:none;letter-spacing:0;margin-left:4px;font-size:.65rem">— tap to toggle · skipped shown in red</span></div>
+    <div id="shop-pills" style="display:flex;flex-wrap:wrap;gap:0;margin-bottom:12px;"></div>
+    <div class="kcard" id="shop-list"></div>
+    <div id="shop-actions" style="margin-top:8px;display:none;">
+      <button class="btn btn-remind" onclick="sendToReminders()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Copy to Reminders</button>
+    </div>
+  </div>
+
+  <!-- SCANNER -->
+  <div class="ksection" id="ks-scanner">
+    <div class="scan-zone" onclick="document.getElementById('r-file').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <div class="sz-t">Photograph or upload receipt</div>
+      <div class="sz-s">Claude reads it and matches ingredients automatically</div>
+    </div>
+    <input type="file" id="r-file" accept="image/*" capture="environment" style="display:none" onchange="scanReceipt(event)">
+    <div id="scan-result" style="display:none">
+      <div class="kcard">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+          <div><div style="font-weight:600;font-size:.88rem;">Scanned Items</div><div style="font-size:.7rem;color:var(--soft)" id="scan-sum"></div></div>
+          <div style="font-family:'DM Mono',monospace;font-size:.95rem;color:var(--gold)" id="scan-tot"></div>
+        </div>
+        <div id="scan-items"></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-primary" onclick="confirmScan()">Add to Pantry</button><button class="btn btn-ghost" onclick="clearScan()">Clear</button></div>
+    </div>
+    <div class="sec-lbl" style="margin-top:14px">Recent Scans</div>
+    <div id="recent-scans"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/></svg><p>No scans yet.</p></div></div>
+  </div>
+
+  <!-- SPEND -->
+  <div class="ksection" id="ks-spend">
+    <div class="spend-card">
+      <div class="ring-wrap">
+        <svg width="70" height="70" viewBox="0 0 70 70">
+          <circle cx="35" cy="35" r="27" fill="none" stroke="var(--border)" stroke-width="5"/>
+          <circle cx="35" cy="35" r="27" fill="none" stroke="var(--gold)" stroke-width="5" stroke-dasharray="169.6" id="spend-ring" stroke-dashoffset="169.6" stroke-linecap="round" style="transition:stroke-dashoffset 1s ease"/>
+        </svg>
+        <div class="ring-lbl"><div class="ring-amt" id="ring-amt">$0</div><div class="ring-sub">spent</div></div>
+      </div>
+      <div class="spend-info"><div class="sp-t" id="sp-t">$0 of $600 budget</div><div class="sp-s" id="sp-s">0 trips this month</div></div>
+    </div>
+    <div class="sec-lbl">Shopping History</div>
+    <div class="kcard" id="spend-hist"></div>
+    <div style="margin-top:10px"><button class="btn btn-ghost" onclick="openModal('m-budget')">Set Monthly Budget</button></div>
+  </div>
+</div>
+
+<!-- ══ DAY DETAIL SHEET ══ -->
+<div class="dd-modal" id="dd-modal" onclick="closeDayModal()">
+  <div class="dd-sheet" onclick="event.stopPropagation()">
+    <div class="dd-handle"></div>
+    <div class="dd-cuisine" id="dd-cuisine"></div>
+    <div class="dd-title" id="dd-title"></div>
+    <div class="dd-note" id="dd-note"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="dd-btn" id="dd-btn" onclick="goToRecipe()" style="flex:1;">View Full Recipe →</button>
+      <button class="dd-btn" id="dd-cooked-btn" onclick="openCookedConfirm()" style="flex:1;background:var(--green);color:#FFFFFF;display:none;">
+        ✓ Mark as Cooked
+      </button>
+    </div>
+    <div id="dd-cooked-badge" style="display:none;text-align:center;padding:8px;background:var(--green-s);border-radius:var(--rs);border:1px solid rgba(90,158,111,.3);font-size:.78rem;color:var(--green);font-weight:600;">
+      ✓ Cooked
+    </div>
+    <div class="dd-weekend" id="dd-weekend" style="display:none">
+      <div class="dd-wk-lbl">Weekend Plan</div>
+      <div class="dd-wk-txt" id="dd-wk-txt"></div>
+    </div>
+    <button class="dd-skip-btn" id="dd-skip-btn" onclick="toggleSkipMeal()">Skip this meal — remove from shopping list</button>
+  </div>
+</div>
+
+<!-- ══ COOKED CONFIRMATION MODAL ══ -->
+<div class="modal-bd" id="m-cooked" onclick="closeModal('m-cooked')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hnd"></div>
+    <h2>Mark as Cooked</h2>
+    <div class="m-sub" id="cooked-recipe-name"></div>
+    <div style="font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Pantry items that will be updated:</div>
+    <div id="cooked-ing-list" style="margin-bottom:14px;"></div>
+    <div style="font-size:.72rem;color:var(--soft);margin-bottom:14px;line-height:1.5;" id="cooked-smart-note"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" style="background:var(--green);color:#FFFFFF;" onclick="confirmCooked()">Confirm & Update Pantry</button>
+      <button class="btn btn-ghost" style="flex:none;width:auto;padding:13px 16px" onclick="closeModal('m-cooked')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALS ══ -->
+<div class="modal-bd" id="m-add" onclick="closeModal('m-add')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hnd"></div><h2>Add Pantry Item</h2><div class="m-sub">Manually add to your inventory</div>
+    <div class="mf"><label>Item Name</label><input type="text" id="add-n" placeholder="e.g. Guanciale"></div>
+    <div class="mf"><label>Quantity / Notes</label><input type="text" id="add-q" placeholder="e.g. 200g, 1 pack"></div>
+    <div class="mf"><label>Status</label><select id="add-s"><option value="in">In Stock</option><option value="low">Running Low</option><option value="out">Out of Stock</option></select></div>
+    <div class="mf"><label>Expiry Date (auto-estimated if left blank)</label><input type="date" id="add-e"></div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="saveAdd()">Add to Pantry</button><button class="btn btn-ghost" style="flex:none;width:auto;padding:13px 16px" onclick="closeModal('m-add')">Cancel</button></div>
+  </div>
+</div>
+
+<div class="modal-bd" id="m-edit" onclick="closeModal('m-edit')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hnd"></div><h2 id="edit-n-title">Edit Item</h2><div class="m-sub">Update status, quantity, or expiry</div>
+    <div class="mf"><label>Quantity / Notes</label><input type="text" id="edit-q"></div>
+    <div class="mf"><label>Status</label><select id="edit-s"><option value="in">In Stock</option><option value="low">Running Low</option><option value="out">Out of Stock</option></select></div>
+    <div class="mf"><label>Expiry Date</label><input type="date" id="edit-e"></div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="saveEdit()">Save</button><button class="btn btn-ghost" style="color:var(--red);border-color:var(--red);flex:none;width:auto;padding:13px 16px" onclick="deleteItem()">Remove</button></div>
+  </div>
+</div>
+
+<div class="modal-bd" id="m-budget" onclick="closeModal('m-budget')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hnd"></div><h2>Monthly Budget</h2><div class="m-sub">Set your grocery spend target</div>
+    <div class="mf"><label>Budget ($)</label><input type="number" id="bgt-i" placeholder="600" inputmode="decimal"></div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="saveBudget()">Save</button><button class="btn btn-ghost" style="flex:none;width:auto;padding:13px 16px" onclick="closeModal('m-budget')">Cancel</button></div>
+  </div>
+</div>
+
+<div class="loading" id="loading"><div class="spinner"></div><div class="load-t" id="load-t">Reading receipt...</div></div>
+<div class="toast" id="toast"></div>
+
+<!-- ══ NAV ══ -->
+<nav class="nav">
+  <button class="ni active" onclick="showPage('recipes',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Recipes</button>
+  <button class="ni" onclick="showPage('calendar',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Calendar</button>
+  <button class="ni" onclick="showPage('kitchen',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 8h14a1 1 0 011 1v6a4 4 0 01-4 4H8a4 4 0 01-4-4V9a1 1 0 011-1z"/><path d="M5 8V6"/><path d="M19 8V6"/><line x1="18" y1="4" x2="20" y2="6"/><path d="M2 8h2"/><path d="M20 8h2"/></svg>Kitchen</button>
+</nav>
+
+<script>
+// ══════════════════════════════════
+// DATA
+// ══════════════════════════════════
+const CUISINE_ACCENT={Italian:"#C0804A",French:"#4A7AB5",Japanese:"#B54A7A",Israeli:"#4AB57A",Chinese:"#B5A04A",Mexican:"#B54A4A",American:"#7A4AB5"};
+const CUISINE_BG={Italian:"rgba(192,128,74,.1)",French:"rgba(74,122,181,.1)",Japanese:"rgba(181,74,122,.1)",Israeli:"rgba(74,181,122,.1)",Chinese:"rgba(181,160,74,.1)",Mexican:"rgba(181,74,74,.1)",American:"rgba(122,74,181,.1)"};
+
+const RECIPES=[
+  {id:1,cuisine:"Italian",title:"Gricia",tags:["pasta","quick","weeknight"],
+   ingredients:["200g guanciale, diced","200g rigatoni or mezze rigatoni","80g Pecorino Romano, finely grated","Freshly cracked black pepper (generous)","Pasta water (reserved)","Salt for pasta water"],
+   steps:[{title:"Render the guanciale",desc:"Add guanciale to a cold pan, no oil. Bring to medium heat slowly — the fat renders into a silky cooking medium. Cook until golden and slightly crispy but not hard.",time:"8–10 min"},{title:"Cook pasta",desc:"Salt water generously. Cook rigatoni 1–2 min less than package directions. Reserve 2 full cups of pasta water before draining.",time:"10–11 min"},{title:"Build the emulsion",desc:"Remove guanciale pan from heat. Add ½ cup pasta water to the guanciale fat. Add drained pasta and toss vigorously. Add Pecorino in stages, adding pasta water as needed.",time:"3–4 min"},{title:"Finish with pepper",desc:"Add a very generous amount of freshly cracked pepper. Toss again. Serve immediately.",time:"1 min"}],
+   tips:["No garlic needed — guanciale fat is the flavour base.","Temperature control is key: remove from heat before adding cheese to prevent clumping.","Pasta water is the glue — don't skip reserving it.","Gricia is the mother dish: add egg yolks → Carbonara. Add tomato → Amatriciana."]},
+  {id:2,cuisine:"Italian",title:"Cacio e Pepe",tags:["pasta","quick","weeknight","3 ingredients"],
+   ingredients:["200g spaghetti or tonnarelli","100g Pecorino Romano, very finely grated","30g Parmesan (optional)","2 tbsp coarsely cracked black pepper","Pasta water","Salt for boiling"],
+   steps:[{title:"Toast the pepper",desc:"Add cracked pepper to a dry wide pan over medium heat. Toast 1–2 min until fragrant.",time:"2 min"},{title:"Cook pasta",desc:"Use less water (about 2L) so the water is extra starchy. Cook to just under al dente. Reserve at least 2 cups pasta water.",time:"9–10 min"},{title:"Make the cheese paste",desc:"Mix grated Pecorino with a small amount of warm (not boiling) pasta water into a smooth, thick paste. If water is too hot, cheese seizes.",time:"2 min"},{title:"Combine off heat",desc:"Add pasta to the pepper pan with a splash of pasta water. Toss. Remove from heat completely, then add cheese paste and toss quickly, adding water in small amounts to loosen.",time:"2–3 min"}],
+   tips:["The paste method prevents clumping — never add dry cheese to a hot pan.","Off heat is essential when adding cheese — residual heat does the work.","Use a wide pan so the pasta can move freely during tossing.","Tonnarelli (fresh square spaghetti) holds the sauce beautifully."]},
+  {id:3,cuisine:"Italian",title:"Amatriciana",tags:["pasta","quick","weeknight","tomato"],
+   ingredients:["200g guanciale, diced","400g San Marzano tomatoes (crushed by hand)","200g rigatoni","80g Pecorino Romano, grated","Dried chilli flakes","Dry white wine (splash)","Salt, black pepper"],
+   steps:[{title:"Render guanciale",desc:"Cold pan, medium heat. Render guanciale until golden. Remove with a slotted spoon, leaving the fat.",time:"8 min"},{title:"Deglaze",desc:"Add a splash of dry white wine to the hot fat. Let it evaporate completely.",time:"1 min"},{title:"Build the sauce",desc:"Add crushed San Marzano tomatoes and chilli flakes. Simmer until sauce thickens and oil separates slightly on top.",time:"15–20 min"},{title:"Cook pasta & finish",desc:"Cook rigatoni to just under al dente. Add to the sauce with a splash of pasta water. Return guanciale. Toss vigorously. Finish with Pecorino.",time:"12 min"}],
+   tips:["San Marzano tomatoes are non-negotiable — lower acidity and more sweetness.","The sauce should look slightly orange — guanciale fat emulsifies into the tomato.","No onion, no garlic — this is traditional Amatriciana from Amatrice.","Batch the sauce and freeze — keeps 3 months."]},
+  {id:4,cuisine:"Italian",title:"Carbonara",tags:["pasta","quick","weeknight","egg"],
+   ingredients:["200g guanciale, diced","200g rigatoni or spaghetti","3 egg yolks + 1 whole egg","80g Pecorino Romano, grated","Coarsely cracked black pepper","Salt, pasta water"],
+   steps:[{title:"Render guanciale",desc:"Cold pan to medium heat. Render until crispy-edged but still slightly yielding. Remove from heat when done.",time:"8–10 min"},{title:"Make egg mixture",desc:"Whisk yolks and whole egg with grated Pecorino until a thick paste forms. Season with pepper. This must be done off heat.",time:"2 min"},{title:"Cook pasta",desc:"Cook to 1 min under al dente. Reserve 2 cups pasta water.",time:"10 min"},{title:"The critical moment",desc:"Remove guanciale pan from heat completely. Let cool 30 seconds. Add pasta with a splash of water. Add egg mixture and toss very rapidly — residual heat cooks eggs to a creamy custard. Add water a little at a time.",time:"2–3 min"}],
+   tips:["Temperature is everything: too hot and you get scrambled eggs. The pan must be off heat.","Add pasta water gradually — you want creamy, not watery.","More yolks = richer sauce. The whole egg adds body.","Serve immediately — carbonara sets as it cools."]},
+  {id:5,cuisine:"Italian",title:"Bolognese (Batch)",tags:["pasta","batch cook","freeze","weekend"],
+   ingredients:["500g beef mince (80/20)","500g pork mince","1 large onion, finely diced","2 sticks celery, finely diced","2 medium carrots, finely diced","200ml dry white wine","400g San Marzano tomatoes","200ml whole milk","500ml beef stock","2 bay leaves","Olive oil, salt, pepper"],
+   steps:[{title:"Make soffritto",desc:"Dice onion, celery, and carrot as finely as possible. Cook in olive oil over low heat until completely soft and sweet.",time:"20–25 min"},{title:"Brown the meat",desc:"Add mince in batches. Do not crowd the pan. You want a deep brown sear, not steaming.",time:"15 min"},{title:"Deglaze with wine",desc:"Add white wine and scrape up browned bits. Cook until wine is fully evaporated.",time:"5 min"},{title:"Add tomatoes & milk",desc:"Add crushed tomatoes and stock. Bring to a simmer. Add milk — the Bologna secret for tenderness. Add bay leaves.",time:"5 min"},{title:"Low and slow simmer",desc:"Cover loosely and simmer on the lowest heat possible, stirring every 30 min. 3+ hours is ideal.",time:"2–3 hrs"},{title:"Batch & freeze",desc:"Portion into freezer containers (about 200g per serve). Keeps 3–6 months.",time:"15 min"}],
+   tips:["The soffritto must cook low and slow — rushing makes the sauce bitter.","Milk is not optional in a true Bolognese — it tenderises the meat proteins.","A tablespoon of tomato paste deepens colour.","This is also the base for your lasagna — make double and freeze both."]},
+  {id:6,cuisine:"Italian",title:"Lasagna",tags:["pasta","batch cook","freeze","weekend","béchamel"],
+   ingredients:["Bolognese sauce (from batch)","Dry lasagna sheets (or fresh)","60g butter","60g plain flour","700ml whole milk","Grated nutmeg","100g Parmesan, grated","Salt, white pepper"],
+   steps:[{title:"Make béchamel",desc:"Melt butter over medium heat. Add flour all at once and stir for 1–2 min (roux). Add warm milk gradually, whisking constantly. Season with salt, white pepper, and nutmeg. Cook until thick.",time:"12–15 min"},{title:"Layer the lasagna",desc:"Spread thin layer of Bolognese on base. Add lasagna sheets. Add Bolognese, then béchamel, then sheets. Repeat 3–4 times. Finish with béchamel and generous Parmesan.",time:"15 min"},{title:"Bake",desc:"Cover with foil and bake at 190°C (375°F). Remove foil for the last 15 min to brown the top.",time:"45 min covered + 15 min uncovered"},{title:"Rest before cutting",desc:"Critical — let the lasagna rest so layers set. Cutting too early turns it to soup.",time:"15–20 min"}],
+   tips:["No ricotta — béchamel gives a silkier, more refined result.","Warm the milk before adding to the roux to prevent lumps.","Freeze individual portions after baking and cooling completely.","Dry pasta sheets work fine — they hydrate in the sauce during baking."]},
+  {id:7,cuisine:"Italian",title:"Saffron Risotto",tags:["rice","weekend","technique"],
+   ingredients:["320g Carnaroli rice","1 small onion, finely diced","150ml dry white wine","1L warm chicken stock","1 generous pinch saffron threads","60g cold butter, cubed","80g Parmesan, grated","Olive oil, salt"],
+   steps:[{title:"Bloom the saffron",desc:"Add saffron threads to a small cup of warm stock. Let steep at least 10 minutes.",time:"10 min"},{title:"Sweat the onion",desc:"Cook onion in olive oil over low-medium heat until completely soft and translucent. Do not brown.",time:"8–10 min"},{title:"Toast the rice",desc:"Add rice and stir to coat in fat. Toast for 2 min until edges look slightly translucent.",time:"2 min"},{title:"Add wine",desc:"Add white wine all at once. Stir constantly until completely absorbed.",time:"3 min"},{title:"Ladle by ladle",desc:"Add warm stock one ladle at a time, stirring constantly. Add the saffron stock partway through for even colour.",time:"18–22 min"},{title:"Mantecatura",desc:"Remove from heat when rice is al dente. Add cold butter and Parmesan. Beat vigorously until creamy and flowing. Rest 1 min, then serve.",time:"3 min"}],
+   tips:["Carnaroli over Arborio — holds shape better and gives creamier result.","Stock must be warm — cold stock shocks the rice.","Mantecatura (butter/cheese beating) is what makes risotto creamy.","Risotto waits for no one — serve immediately."]},
+  {id:8,cuisine:"French",title:"French Onion Soup",tags:["soup","weeknight","quick"],
+   ingredients:["1.2kg onions, thinly sliced","60g butter","2 tbsp olive oil","200ml dry white wine","1.2L beef stock","1 tbsp plain flour","Fresh thyme, 2 bay leaves","Baguette slices (toasted)","150g Gruyère, grated","Salt, black pepper"],
+   steps:[{title:"Caramelise onions slowly",desc:"Melt butter and oil in a wide heavy pot over medium-low heat. Add onions and stir to coat. Cook, stirring every 5 min, until deeply golden-brown and jammy.",time:"45–60 min"},{title:"Add flour & wine",desc:"Sprinkle flour over onions, stir for 1 min. Add wine and stir to deglaze. Cook until wine evaporates.",time:"5 min"},{title:"Add stock & simmer",desc:"Add warm beef stock, thyme, and bay leaves. Simmer gently.",time:"20 min"},{title:"Gratinée",desc:"Ladle soup into oven-safe bowls. Float toasted baguette slices on top. Pile generously with Gruyère. Broil until bubbling and spotted brown.",time:"5–7 min (broil)"}],
+   tips:["The caramelisation is non-negotiable — 45 min minimum. Colour should be deep mahogany.","Add a pinch of sugar with the onions if they are slow to colour.","Gruyère is traditional but Emmental or Comté work too.","Soup base freezes well — make a big batch without the bread/cheese step."]},
+  {id:9,cuisine:"French",title:"Beef Bourguignon",tags:["braise","weekend","batch cook","freeze"],
+   ingredients:["1.2kg beef chuck, cut into 5cm cubes","750ml Burgundy or Pinot Noir","200g bacon lardons","2 carrots, roughly chopped","1 onion, roughly chopped","3 sprigs fresh thyme","2 bay leaves","500ml beef stock","2 tbsp tomato paste","Plain flour for dusting","200ml mushroom-infused stock (strained)","Olive oil, salt, pepper"],
+   steps:[{title:"Marinate the beef",desc:"Combine beef, wine, carrots, onion, thyme, and bay leaves. Refrigerate overnight or at least 4 hours.",time:"4+ hrs (inactive)"},{title:"Prep & sear",desc:"Remove beef from marinade, pat completely dry. Strain and reserve the marinade. Dust beef lightly with flour. Sear in batches in hot oil until very deeply browned on all sides.",time:"20 min"},{title:"Render bacon",desc:"In the same pot, render bacon lardons until golden. Remove and set aside.",time:"5 min"},{title:"Build the braise",desc:"Add tomato paste to pot. Add reserved marinade vegetables and cook briefly. Pour in strained marinade liquid and stock. Add mushroom-infused stock. Return beef and bacon.",time:"10 min"},{title:"Braise low and slow",desc:"Cover and braise in oven at 160°C (325°F) or on lowest stovetop heat.",time:"2.5–3 hrs"},{title:"Reduce & finish",desc:"Remove beef. Strain braising liquid. Return to pot and reduce until silky and coating. Add beef back. Adjust seasoning.",time:"15–20 min"}],
+   tips:["Patting beef dry is essential — wet meat steams rather than browns.","No whole mushrooms (texture) — infuse dried mushrooms in hot water, strain, and use that liquid.","Overnight marinating makes a notable difference.","Freezes beautifully — portion and freeze after cooling completely."]},
+  {id:10,cuisine:"French",title:"Steak & Eggs",tags:["quick","weeknight","mother sauce"],
+   ingredients:["2 good steaks (ribeye or NY strip)","4 eggs","3 egg yolks","200g unsalted butter, clarified","2 tbsp lemon juice","Pinch cayenne","Salt, white pepper","Fresh herbs to finish"],
+   steps:[{title:"Clarify butter",desc:"Melt butter slowly over low heat. Skim the white foam. Pour off the clear golden butter, leaving milky solids behind. Keep warm.",time:"10 min"},{title:"Make Hollandaise",desc:"Whisk yolks with lemon juice in a bowl over barely simmering water (bowl should not touch water). Whisk until thick, pale, and ribboning. Remove from heat.",time:"5–8 min"},{title:"Emulsify",desc:"Drizzle clarified butter into yolks very slowly while whisking constantly. Start drop by drop, then in a thin stream. Season with cayenne and salt.",time:"5 min"},{title:"Cook steak",desc:"Season generously with salt and pepper. Sear in a very hot cast iron pan. 3–4 min per side for medium-rare. Rest the steak.",time:"8–10 min + 5 min rest"},{title:"Cook eggs",desc:"Fry or poach eggs to your preference. Serve alongside rested steak with Hollandaise drizzled over.",time:"3–4 min"}],
+   tips:["Hollandaise is one of the French mother sauces — learn this and you can make Béarnaise (add tarragon).","If Hollandaise breaks: whisk a fresh yolk in a clean bowl, then slowly whisk the broken sauce into it.","Clarified butter keeps refrigerated for weeks — make a large batch.","Always rest steak at least 5 min."]},
+  {id:11,cuisine:"French",title:"En Papillote (Salmon)",tags:["fish","weeknight","technique"],
+   ingredients:["2 salmon fillets (or black cod/cod)","1 lemon, thinly sliced","Fresh herbs (tarragon, dill, or thyme)","2 tbsp dry white wine","Cherry tomatoes (handful)","Thin asparagus or green beans","Baby potatoes (par-boiled)","Olive oil, salt, pepper"],
+   steps:[{title:"Prepare parchment",desc:"Cut a large sheet of parchment (about 40cm). Fold in half and cut into a heart shape when unfolded.",time:"2 min"},{title:"Build the packet",desc:"Lay veggies on one half of the parchment. Place fish on top. Add lemon slices, herbs, a splash of wine, and a drizzle of olive oil. Season well.",time:"5 min"},{title:"Seal tightly",desc:"Fold the parchment over the fish and crimp the edges tightly in small overlapping folds — this traps the steam.",time:"2 min"},{title:"Bake",desc:"Place packets on a baking sheet. Bake at 200°C (400°F). The packet will puff up dramatically.",time:"12–15 min (salmon), 15–18 min (cod)"},{title:"Serve in the packet",desc:"Bring the packet to the table and open there — the steam release is part of the experience.",time:"1 min"}],
+   tips:["This technique works with almost any protein — explore chicken, sea bass, or halibut.","Par-boil potatoes first — raw potatoes won't cook through in time.","Thicker cod needs 3 more minutes than salmon.","Experiment with Velouté poured over after opening for a sauce element."]},
+  {id:12,cuisine:"French",title:"Potato-Crusted Fish",tags:["fish","weekend","technique"],
+   ingredients:["2 firm white fish fillets (sole, sea bass, or cod)","2 large starchy potatoes","2 tbsp Dijon mustard","Clarified butter","Salt, white pepper","Chives to finish","Lemon wedges"],
+   steps:[{title:"Prep the potato crust",desc:"Peel potatoes. Slice paper-thin. Pat completely dry with paper towels — moisture is the enemy of crispness.",time:"10 min"},{title:"Season fish & apply mustard",desc:"Season fish on the flesh side. Brush the skin side (or top) with a thin layer of Dijon — this acts as the adhesive for the potato crust.",time:"2 min"},{title:"Apply the crust",desc:"Layer potato slices overlapping like scales, pressing firmly onto the mustard-coated side. Season the potato layer.",time:"5 min"},{title:"Pan-fry crust-side down",desc:"Add clarified butter to a non-stick pan over medium-high heat. Place fish potato-side down. Do not move. Cook until the crust is deep golden and releasing easily.",time:"4–5 min"},{title:"Flip and finish",desc:"Flip once. Reduce heat and finish cooking the fish through.",time:"2–3 min"}],
+   tips:["Clarified butter has a higher smoke point — essential to avoid burning.","The patience not to move the fish while the crust forms is critical.","Pair with Beurre Blanc: reduce white wine and shallots, then whisk in cold butter cubes over low heat.","This technique is impressive and highly adaptable."]},
+  {id:13,cuisine:"Japanese",title:"Chicken Katsu",tags:["quick","weeknight","batch cook","freeze"],
+   ingredients:["2 chicken breasts, butterflied and pounded thin","50g plain flour","2 eggs, beaten","100g panko breadcrumbs","Neutral oil for frying","Salt, white pepper","Tonkatsu sauce","Steamed rice, shredded cabbage"],
+   steps:[{title:"Set up breading station",desc:"Three shallow dishes: flour (seasoned), beaten egg, panko. Press chicken gently to even thickness.",time:"5 min"},{title:"Bread the chicken",desc:"Flour → egg → panko. Press the panko firmly to adhere — this is what gives the dramatic crunch. Set on a wire rack for 5 min before frying.",time:"5 min"},{title:"Fry",desc:"Heat oil to 170°C (340°F). Test with a panko crumb — should sizzle and float immediately. Fry chicken, turning once, until deep golden.",time:"5–6 min"},{title:"Rest & slice",desc:"Rest on a wire rack (not paper towels). Slice on the diagonal and serve over rice with shredded cabbage.",time:"3 min"}],
+   tips:["Wire rack for resting — paper towels trap steam and destroy the crust.","Oil temperature is critical: too low = greasy, too high = burnt outside, raw inside.","Batch: fry, cool, freeze on a tray, then bag. Reheat in oven at 180°C for 12 min.","Tonkatsu sauce: Worcestershire + ketchup + soy sauce + honey."]},
+  {id:14,cuisine:"Japanese",title:"Katsu Curry Rice",tags:["rice","weeknight","batch cook"],
+   ingredients:["Chicken Katsu (from recipe above)","2 tbsp Japanese curry powder","1 onion, diced","2 carrots, diced into chunks","2 medium potatoes, cubed","600ml chicken stock","1 tbsp soy sauce","1 tsp honey","1 tsp ginger (grated from frozen)","Steamed short-grain rice"],
+   steps:[{title:"Sweat the aromatics",desc:"Cook onion in oil over medium heat until soft. Add grated ginger.",time:"5–8 min"},{title:"Add veg & spice",desc:"Add carrots and potatoes. Add curry powder and stir to coat — cooking spices in fat releases volatile compounds for maximum flavour.",time:"3 min"},{title:"Build the sauce",desc:"Add stock, soy sauce, and honey. Bring to a simmer. Cook until vegetables are tender and sauce thickens naturally from potato starch.",time:"20–25 min"},{title:"Adjust & serve",desc:"Taste and adjust. Serve over steamed rice with sliced Katsu on top.",time:"5 min"}],
+   tips:["Japanese curry is mild and sweet by nature — very different from Indian curry.","The potato starch thickens the sauce naturally.","Batch the curry sauce and freeze separately — reheat with freshly made Katsu.","Blooming the curry powder in fat is the single most important flavour step."]},
+  {id:15,cuisine:"Japanese",title:"Gyoza (Pan-Seared)",tags:["batch cook","freeze","weekend"],
+   ingredients:["300g pork mince (or chicken)","200g napa cabbage, very finely shredded","2 tbsp soy sauce","1 tbsp sesame oil","1 tbsp mirin","2 tsp ginger, grated","2 spring onions, finely chopped","Gyoza wrappers (store-bought)","Neutral oil","Water for steaming"],
+   steps:[{title:"Salt & squeeze the cabbage",desc:"Salt shredded cabbage, let sit 10 min, then squeeze out all excess moisture with your hands. This prevents soggy filling.",time:"12 min"},{title:"Make the filling",desc:"Combine mince, squeezed cabbage, soy, sesame oil, mirin, ginger, and spring onions. Mix until slightly sticky.",time:"5 min"},{title:"Fold gyoza",desc:"Place 1 tsp filling in the centre of a wrapper. Wet the edge with water. Fold over and pleat the top edge into 5–6 folds while pressing the bottom edge flat.",time:"20–30 min (batch)"},{title:"Yaki-gyoza method",desc:"Heat oil in non-stick pan over medium-high. Add gyoza flat-side down in a single layer. Fry until base is golden brown. Add ¼ cup water and immediately cover.",time:"3 min (fry) + 4 min (steam)"},{title:"The crispy finish",desc:"Remove lid and let remaining water evaporate. The base crisps again as it dries out. Serve immediately, crispy-side up.",time:"2 min"}],
+   tips:["Squeeze out all cabbage moisture — the single most important step.","Freeze uncooked gyoza on a tray, then bag. Cook from frozen — add 2 extra minutes.","Classic dipping sauce: soy sauce + rice vinegar + chilli oil.","Use a non-stick pan — gyoza will tear on stainless steel."]},
+  {id:16,cuisine:"Japanese",title:"Tempura Veg + Udon",tags:["quick","technique","weeknight"],
+   ingredients:["Mixed veg: sweet potato, broccoli, capsicum, zucchini","150g tempura flour (or plain flour + cornstarch 1:1)","200ml ice-cold sparkling water","Neutral oil for deep frying","400g fresh or dried udon noodles","500ml dashi stock","3 tbsp soy sauce","2 tbsp mirin","Spring onions, grated daikon to serve"],
+   steps:[{title:"Make dashi broth",desc:"Heat dashi stock. Add soy and mirin. Simmer gently. Taste and adjust.",time:"10 min"},{title:"Prep veg",desc:"Cut veg into consistent thickness. Pat completely dry — water causes the batter to fail.",time:"10 min"},{title:"Make the batter",desc:"Combine flour and ice-cold sparkling water just before frying. Do NOT overmix — lumps are fine and desired.",time:"2 min"},{title:"Fry at high heat",desc:"Oil at 180°C (355°F). Dip veg in batter and lower gently into oil. Fry until batter is set and very lightly golden.",time:"2–3 min per batch"},{title:"Cook udon & serve",desc:"Cook udon per package. Serve in hot dashi broth topped with tempura pieces, spring onion, and daikon.",time:"5 min"}],
+   tips:["Cold batter, hot oil — the temperature contrast is what makes tempura shatter-crispy.","Mix batter just before frying — never in advance.","Fry in small batches — crowding drops the oil temperature.","Explore adding prawns, fish, or mushrooms."]},
+  {id:17,cuisine:"Israeli",title:"Shakshuka",tags:["eggs","quick","weeknight","batch cook"],
+   ingredients:["400g crushed tomatoes","1 red capsicum, diced","1 onion, diced","1 tsp cumin","1 tsp smoked paprika","½ tsp turmeric","½ tsp cayenne","4–6 eggs","Olive oil, salt, pepper","Fresh flat-leaf parsley","Feta to serve (optional)"],
+   steps:[{title:"Build the base",desc:"Heat olive oil in a wide pan. Cook onion until soft. Add capsicum and cook until softened. Add cumin, paprika, turmeric, and cayenne — cook in the fat for 1 min to bloom.",time:"12–15 min"},{title:"Add tomatoes & simmer",desc:"Add crushed tomatoes. Season with salt and pepper. Simmer until sauce thickens and oil separates on top.",time:"15–20 min"},{title:"Add eggs",desc:"Make wells in the sauce with a spoon. Crack eggs into each well. Cover and cook over low heat until whites are just set but yolks are still runny.",time:"6–8 min"},{title:"Finish & serve",desc:"Scatter parsley and crumble feta over if using. Serve directly from the pan with warm bread.",time:"2 min"}],
+   tips:["Batch the tomato base and freeze it — add fresh eggs when reheating.","The spice bloom in oil is essential — it transforms raw spice into fragrant depth.","Wide pan means more surface area for eggs.","Cover with a glass lid so you can watch the eggs."]},
+  {id:18,cuisine:"Israeli",title:"Falafel",tags:["batch cook","freeze","weekend","chickpeas"],
+   ingredients:["400g dried chickpeas (NOT canned)","1 onion, roughly chopped","1 bunch flat-leaf parsley","2 tsp cumin","1 tsp coriander seed, toasted and ground","1 tsp baking powder","Salt, pepper","Neutral oil for frying"],
+   steps:[{title:"Soak chickpeas overnight",desc:"Cover dried chickpeas with cold water by 10cm. Soak 12–24 hours. They will double in size. Drain completely.",time:"Overnight"},{title:"Process",desc:"Add soaked (NOT cooked) chickpeas to a food processor with onion, parsley, cumin, ground coriander, baking powder, salt and pepper. Process until mixture resembles coarse breadcrumbs — not smooth.",time:"3–5 min"},{title:"Rest the mixture",desc:"Refrigerate the mixture for at least 1 hour. This helps the falafel hold its shape.",time:"1 hr"},{title:"Form & fry",desc:"Form into balls or patties. Oil at 175°C (350°F). Fry until deep golden-brown all over. Drain on a wire rack.",time:"3–4 min per batch"},{title:"Batch freeze",desc:"Cool completely. Freeze on a tray, then bag. Reheat in oven at 180°C for 10–12 min.",time:"15 min"}],
+   tips:["Dried chickpeas only — canned chickpeas are too wet and make falafel that falls apart.","Do not over-process — falafel should have texture, not be a smooth paste.","The baking powder is what makes them light inside.","Test fry one first — if it falls apart, add 1–2 tbsp flour to the mix."]},
+  {id:19,cuisine:"Israeli",title:"Shawarma",tags:["batch cook","weeknight","freeze"],
+   ingredients:["800g chicken thighs (or 600g beef mince for roll version)","2 tsp cumin","2 tsp smoked paprika","1 tsp turmeric","1 tsp coriander","½ tsp cayenne","½ tsp cinnamon","2 tbsp olive oil","2 tbsp lemon juice","Salt, pepper","Pita or flatbread, tahini, Israeli salad"],
+   steps:[{title:"Make the spice blend",desc:"Combine all spices. This is your shawarma blend — make extra and store in an airtight jar.",time:"2 min"},{title:"Marinate",desc:"Coat protein thoroughly in spice blend + olive oil + lemon juice. Marinate overnight for chicken thighs, or 1 hour minimum.",time:"1 hr – overnight"},{title:"For chicken: high-heat roast",desc:"Roast thighs at 220°C (425°F) until charred at the edges and cooked through. Slice thinly against the grain.",time:"25–30 min"},{title:"For beef roll version",desc:"Mix ground beef with spice blend. Form into a log on parchment. Roll tightly. Refrigerate 1 hr to firm. Cook at 180°C for 20 min. Slice thin.",time:"20–25 min"},{title:"Serve",desc:"Wrap in warm pita with tahini, Israeli salad (tomato, cucumber, lemon). Can be plated as a bowl over rice.",time:"5 min"}],
+   tips:["Chicken thighs are essential — breast dries out under these conditions.","The beef roll method is a clever home adaptation — the log shape mimics the rotisserie.","Batch cook and freeze sliced shawarma — reheats in a dry pan in 2 minutes.","The spice blend is flexible — make it your own."]},
+  {id:20,cuisine:"Chinese",title:"Fried Rice",tags:["rice","quick","weeknight","no garlic"],
+   ingredients:["400g day-old cooked rice (crucial)","2 eggs","Spring onions, sliced","1 tbsp fresh ginger, grated","2 tbsp soy sauce","1 tbsp sesame oil (finishing only)","1 tsp rice vinegar","Neutral oil","Chicken thigh or beef (diced)","Frozen peas, diced carrot"],
+   steps:[{title:"Prep mise en place",desc:"Everything must be ready before you start — fried rice cooks in 5 minutes total.",time:"10 min"},{title:"Cook protein first",desc:"High heat, a little oil. Sear chicken or beef until golden. Remove and set aside.",time:"4–5 min"},{title:"Scramble eggs",desc:"Add eggs to the same hot wok. Scramble until just set and slightly broken up. Push to the side.",time:"1 min"},{title:"Fry the rice",desc:"Add oil. Add rice and spread in a single layer. Press down and let it sit — you want the bottom layer to slightly toast and crisp.",time:"3–4 min"},{title:"Season & finish",desc:"Add ginger and spring onions. Add soy sauce, rice vinegar, and peas/carrots. Return protein. Toss on maximum heat. Remove from heat, add sesame oil.",time:"2 min"}],
+   tips:["Day-old rice is not optional — fresh rice turns into a paste.","Maximum heat is the secret — wok hei comes from intense heat.","Sesame oil added at the end, not during cooking — it burns and turns bitter.","This works with any protein or veg combination."]},
+  {id:21,cuisine:"Chinese",title:"Stir Fry",tags:["quick","weeknight","no garlic"],
+   ingredients:["400g chicken thigh strips or flank steak","1 tbsp soy sauce (marinade)","1 tsp cornstarch (marinade)","2 tbsp fresh ginger, julienned","3 spring onions, cut into 3cm pieces","2 tbsp soy sauce","1 tbsp oyster sauce","1 tsp rice vinegar","1 tsp sesame oil","1 tsp sugar","200g broccolini or bok choy","Neutral oil"],
+   steps:[{title:"Velvet the protein",desc:"Toss sliced protein with soy sauce, cornstarch, and a little neutral oil. Marinate 15 min. This is velveting — cornstarch creates a silky, tender texture.",time:"15 min (marinate)"},{title:"Make the sauce",desc:"Combine soy sauce, oyster sauce, rice vinegar, sesame oil, and sugar in a small bowl. Have this ready before the wok is on.",time:"2 min"},{title:"High-heat cook protein",desc:"Screaming hot wok with oil. Add protein in a single layer — don't stir immediately. Let it sear for 30 seconds, then toss.",time:"3 min"},{title:"Cook veg & aromatics",desc:"Add more oil if needed. Add ginger and spring onions — stir fry 30 seconds. Add harder veg first (broccoli), then softer veg.",time:"2–3 min"},{title:"Combine & sauce",desc:"Return protein. Add sauce. Toss everything together on maximum heat for 1 minute until sauce reduces and coats everything.",time:"1 min"}],
+   tips:["Velveting is the Chinese technique that makes restaurant stir-fry proteins impossibly tender.","Slice beef against the grain and as thin as possible — partially freeze it first.","No garlic version: ginger + spring onions + chilli oil do the heavy lifting.","The wok must be smoking before adding protein."]},
+  {id:22,cuisine:"Mexican",title:"Tacos",tags:["quick","weeknight","batch cook"],
+   ingredients:["500g chicken thighs or beef mince","2 tsp cumin","2 tsp smoked paprika","1 tsp chilli powder","1 tsp dried oregano","½ tsp cayenne","1 lime, juiced","Salt, pepper","Corn tortillas (store-bought)","Toppings: diced tomato, shredded lettuce, sour cream, grated cheese"],
+   steps:[{title:"Make taco spice blend",desc:"Combine cumin, paprika, chilli powder, oregano, and cayenne. Make extra and store.",time:"2 min"},{title:"For chicken: season & sear",desc:"Coat chicken thighs in spice blend and lime juice. Cook in a hot cast iron pan until charred and cooked through. Rest, then shred or slice.",time:"15 min"},{title:"For beef mince: brown & season",desc:"Brown mince, breaking it up. Drain excess fat. Add spice blend and a splash of water. Cook until fragrant and slightly saucy.",time:"10 min"},{title:"Warm tortillas",desc:"Char directly over a gas flame for 20 seconds per side, turning with tongs. Or heat dry in a pan. Wrap in a tea towel to keep warm.",time:"5 min"},{title:"Assemble",desc:"Fill tortillas and top with your choice. Squeeze lime over everything at the table.",time:"5 min"}],
+   tips:["Chicken thighs over breast — they stay moist and take char better.","Batch cook seasoned beef mince and freeze in 200g portions.","Char the tortillas over a flame — it adds smokiness that transforms the taco.","No cilantro — use lime juice, spring onion tops, and extra cumin."]},
+  {id:23,cuisine:"Mexican",title:"Enchiladas",tags:["batch cook","weeknight","freeze"],
+   ingredients:["4 cooked chicken thighs, shredded","8 corn tortillas","400g crushed tomatoes","2 tbsp chilli powder","1 tsp cumin","1 tsp smoked paprika","1 tsp dried oregano","500ml chicken stock","200g grated cheese","Sour cream to serve"],
+   steps:[{title:"Make enchilada sauce",desc:"Cook chilli powder, cumin, paprika, and oregano in a little oil for 1 min. Add crushed tomatoes and chicken stock. Simmer until slightly thickened.",time:"15–20 min"},{title:"Soften tortillas",desc:"Briefly dip each tortilla in warm sauce to soften — this prevents cracking when rolling.",time:"3 min"},{title:"Fill & roll",desc:"Fill each tortilla with shredded chicken and a little cheese. Roll and place seam-side down in a baking dish.",time:"10 min"},{title:"Top & bake",desc:"Pour remaining sauce over enchiladas. Top generously with cheese. Bake until bubbling and cheese is golden.",time:"20–25 min at 190°C"}],
+   tips:["Use batch-cooked chicken or freeze extra shredded chicken.","The sauce can be batched and frozen separately.","Soften tortillas in sauce — dry rolling causes tearing.","Layer extra sauce on the base of the dish to prevent the bottom from drying out."]},
+  {id:24,cuisine:"American",title:"Pizza",tags:["dough","weeknight","batch"],
+   ingredients:["500g strong bread flour (00 flour preferred)","7g instant yeast","2 tsp salt","1 tsp sugar","300ml warm water","2 tbsp olive oil","San Marzano tomato sauce","Fresh mozzarella","Toppings of choice"],
+   steps:[{title:"Make the dough",desc:"Combine flour, yeast, salt. Add warm water and oil. Mix until a shaggy dough forms, then knead until smooth and elastic.",time:"10 min knead"},{title:"Cold ferment (best method)",desc:"Divide into 2 balls. Oil lightly, cover, and refrigerate 24–72 hours. Cold fermentation develops flavour dramatically.",time:"24–72 hrs (inactive)"},{title:"Bring to room temp",desc:"Remove dough 1–2 hours before using. Let it come to room temperature — cold dough tears.",time:"1–2 hrs"},{title:"Shape",desc:"Stretch by hand on a floured surface — do not use a rolling pin. Use gravity and your knuckles to stretch gently from the edges.",time:"5 min"},{title:"Top & bake",desc:"Preheat oven to maximum (250°C/480°F) with a baking stone or heavy baking sheet inside for at least 30 min. Top sparingly. Bake until crust is charred at the edges.",time:"8–10 min"}],
+   tips:["Cold ferment 72 hours makes a dramatically better dough than same-day.","Less is more with toppings — a wet pizza is a sad pizza.","Preheat the stone/tray — this gives a crispy base.","Make extra dough balls and freeze individually after the first rise."]},
+  {id:25,cuisine:"American",title:"Burgers",tags:["quick","Mon/Tue/weekend"],
+   ingredients:["500g beef mince (80/20 fat)","Salt, black pepper","Burger buns (store-bought or homemade)","American cheese","Butter (for toasting buns)","Condiments: ketchup, mustard, mayo","Toppings: lettuce, tomato"],
+   steps:[{title:"Form loose patties",desc:"Divide mince into 120g balls. Do not compress or overwork. Season the outside generously with salt and pepper just before cooking.",time:"5 min"},{title:"Ripping hot pan",desc:"Heat pan until smoking. Add no oil. Place balls and immediately press flat with a heavy spatula.",time:"30 sec"},{title:"The smash",desc:"Smash patty to about 1cm thin. The crust that forms is the Maillard reaction — this is flavour. Do not move or press again.",time:"2–3 min (first side)"},{title:"Flip & cheese",desc:"Flip once when edges are browned and top looks almost cooked through. Add cheese immediately after flipping.",time:"1 min (second side)"},{title:"Toast buns & assemble",desc:"Butter the cut side of buns and toast in the same pan. Assemble with toppings.",time:"2 min"}],
+   tips:["80/20 mince is non-negotiable — leaner beef makes a dry burger.","Season the outside only, just before cooking — salt draws out moisture if applied too early.","The smash burger method creates maximum surface area for crust.","For homemade buns: enriched dough (milk, egg, butter) gives the classic soft result."]},
+  {id:26,cuisine:"American",title:"BBQ (Dutch Oven)",tags:["weekend","batch cook","technique","freeze"],
+   ingredients:["1.5kg beef brisket or pork ribs","DRY RUB: 1 tbsp salt, 2 tbsp brown sugar, 1 tsp smoked paprika, 1 tsp onion powder, 1 tsp cumin, 1 tsp black pepper, 1 tsp cayenne, 1 tsp mustard powder","200ml apple cider vinegar","200ml beef or chicken stock"],
+   steps:[{title:"Make & apply the rub",desc:"Combine all rub ingredients. Coat the meat generously on all sides, pressing firmly. Refrigerate uncovered overnight for a bark to develop.",time:"Overnight"},{title:"Sear",desc:"In the Dutch oven over high heat, sear the meat on all sides until deeply browned.",time:"10–15 min"},{title:"Build the braise liquid",desc:"Add apple cider vinegar and stock to the pot. Add any remaining rub to the liquid.",time:"2 min"},{title:"Low and slow in oven",desc:"Cover tightly. Cook in oven at 140°C (285°F). Goal: 95°C internal for brisket, 88°C for ribs.",time:"4–6 hrs brisket, 3–4 hrs ribs"},{title:"Rest, then reduce sauce",desc:"Remove meat and rest wrapped in foil. Skim fat from cooking liquid. Reduce on stovetop to a glaze. Brush over rested meat.",time:"30 min rest + 15 min reduce"}],
+   tips:["The overnight uncovered rub creates a bark — the dry outer crust that mimics real BBQ.","Low temperature and time is the technique — there are no shortcuts.","Apple cider vinegar adds the acidity that real BBQ smoke provides.","A meat thermometer is essential — temperature, not time, determines doneness."]}
+];
+
+const CALENDAR={
+  may:{
+    16:{cuisine:"Japanese",entree:"Chicken Katsu",note:"Batch: freeze extra portions",recipeId:13,weekend:"Edamame salad · Castella cake (explore)"},
+    17:{cuisine:"Mexican",entree:"Tacos (chicken)",note:"Quick · store-bought tortillas",recipeId:22},
+    18:{cuisine:"Israeli",entree:"Shakshuka",note:"Quick · batch: freeze tomato base",recipeId:17},
+    19:{cuisine:"Chinese",entree:"Fried Rice (chicken)",note:"Quick · no garlic · ginger base",recipeId:20},
+    20:{cuisine:"American",entree:"Burgers",note:"Mon · quick · homemade patty",recipeId:25},
+    21:{cuisine:"French",entree:"French Onion Soup",note:"Quick · use frozen stock",recipeId:8},
+    22:{cuisine:"Japanese",entree:"Gyoza (from freezer)",note:"Pull from freezer · quick",recipeId:15},
+    23:{cuisine:"PREP",entree:"LIGHT PREP",note:"Batch: gyoza filling · freeze · pasta dough",weekend:"Bread: Baguette practice · Caprese · Panna cotta"},
+    24:{cuisine:"PREP",entree:"LIGHT PREP",note:"Assemble & freeze lasagna · freezer audit",weekend:"No bread bake · light dessert only"},
+    25:{cuisine:"Italian",entree:"Gricia",note:"Use fresh pasta from prep",recipeId:1},
+    26:{cuisine:"Mexican",entree:"Burritos (beef)",note:"Quick · use batch beef",recipeId:22},
+    27:{cuisine:"Israeli",entree:"Falafel (from freezer)",note:"Pull from freezer · quick",recipeId:18},
+    28:{cuisine:"Chinese",entree:"Stir Fry (chicken)",note:"Quick · no garlic · ginger + scallion",recipeId:21},
+    29:{cuisine:"Italian",entree:"Carbonara",note:"Quick · guanciale + pecorino + egg",recipeId:4},
+    30:{cuisine:"PREP",entree:"PREP WEEKEND",note:"Batch: Bolognese · Israeli spice blends · falafel",heavy:true,weekend:"Bread: Challah attempt · Hummus + Salatim · Halva"},
+    31:{cuisine:"PREP",entree:"PREP WEEKEND",note:"Explore: Rugelach (choc filled) · freeze falafel",heavy:true,weekend:"No bread bake (oven used for Rugelach)"}
+  },
+  june:{
+    1:{cuisine:"Italian",entree:"Bolognese (from freezer)",note:"Pull from freezer · quick",recipeId:5},
+    2:{cuisine:"French",entree:"Steak & Eggs",note:"Quick · practice Hollandaise",recipeId:10},
+    3:{cuisine:"Mexican",entree:"Enchiladas (chicken)",note:"Quick · use frozen base",recipeId:23},
+    4:{cuisine:"Israeli",entree:"Shawarma (chicken)",note:"Quick · marinate night before",recipeId:19},
+    5:{cuisine:"American",entree:"Pizza (homemade dough)",note:"Quick · dough mastered",recipeId:24},
+    6:{cuisine:"PREP",entree:"PREP WEEKEND",note:"Batch: Beef Bourguignon · BBQ rub experiments",heavy:true,weekend:"Bread: No-knead Dutch oven · Buffalo wings · Apple pie"},
+    7:{cuisine:"PREP",entree:"PREP WEEKEND",note:"BBQ chicken · burger buns (first attempt) · freeze",heavy:true,weekend:"No bread bake · Churros (classic version)"},
+    8:{cuisine:"American",entree:"Burgers",note:"Mon · use batch buns from weekend",recipeId:25},
+    9:{cuisine:"Japanese",entree:"Katsu Curry (from freezer)",note:"Pull from freezer · quick",recipeId:14},
+    10:{cuisine:"French",entree:"En Papillote (salmon)",note:"Quick · practice Velouté",recipeId:11},
+    11:{cuisine:"Italian",entree:"Lasagna (from freezer)",note:"Pull from freezer · quick",recipeId:6},
+    12:{cuisine:"OUT",entree:"OUT OF TOWN",note:"No cooking"},
+    13:{cuisine:"OUT",entree:"OUT OF TOWN",note:"No cooking · no prep"},
+    14:{cuisine:"OUT",entree:"OUT OF TOWN",note:"No cooking · no prep"},
+    15:{cuisine:"Israeli",entree:"Shakshuka (from freezer)",note:"Pull from freezer · ease back in",recipeId:17},
+    16:{cuisine:"Mexican",entree:"Tacos (beef)",note:"Quick · use frozen seasoned beef",recipeId:22},
+    17:{cuisine:"Chinese",entree:"Fried Rice (chicken)",note:"Quick · no garlic · ginger base",recipeId:20},
+    18:{cuisine:"French",entree:"Bourguignon (from freezer)",note:"Pull from freezer · quick",recipeId:9},
+    19:{cuisine:"Japanese",entree:"Gyoza (from freezer)",note:"Pull from freezer · quick",recipeId:15},
+    20:{cuisine:"PREP",entree:"PREP WEEKEND",note:"Batch: Bolognese · fresh pasta ravioli attempt · gyoza",heavy:true,weekend:"Bread: Pugliese (first attempt) · Tempura veg · Sesame balls"},
+    21:{cuisine:"PREP",entree:"PREP WEEKEND",note:"Assemble lasagna · freeze · spice audit",heavy:true,weekend:"No bread bake · Taiyaki (explore)"},
+    22:{cuisine:"American",entree:"Burgers",note:"Mon · use remaining batch buns",recipeId:25},
+    23:{cuisine:"Israeli",entree:"Falafel (from freezer)",note:"Pull from freezer · quick",recipeId:18},
+    24:{cuisine:"Italian",entree:"Amatriciana",note:"Quick · guanciale + tomato",recipeId:3},
+    25:{cuisine:"Mexican",entree:"Nachos",note:"Quick · flex appetizer or entrée",recipeId:22},
+    26:{cuisine:"Japanese",entree:"Chicken Katsu",note:"Quick · panko + egg",recipeId:13},
+    27:{cuisine:"PREP",entree:"LIGHT PREP",note:"Light restock · freezer audit · easy prep only",weekend:"Bread: Sourdough starter attempt · Salade Niçoise · Crème Brûlée"},
+    28:{cuisine:"PREP",entree:"LIGHT PREP",note:"Potato-crusted fish · practice Beurre Blanc",weekend:"No bread bake · Daifuku (first attempt)"},
+    29:{cuisine:"Italian",entree:"Cacio e Pepe",note:"Quick · end of month · pecorino + pepper",recipeId:2},
+    30:{cuisine:"Israeli",entree:"Shawarma (ground beef)",note:"Quick · use remaining beef",recipeId:19}
+  }
+};
+
+const SHELF_LIFE={chicken:2,beef:3,pork:3,fish:2,salmon:2,cod:2,steak:3,egg:28,eggs:28,milk:10,butter:60,cheese:21,parmesan:30,pecorino:30,mozzarella:7,gruyere:21,feta:14,cream:10,onion:30,carrot:21,tomato:7,lemon:21,lime:21,capsicum:10,potato:30,ginger:14,cabbage:14,avocado:5,pasta:730,rice:730,flour:365,panko:180,"soy sauce":365,"olive oil":365,"sesame oil":180,wine:365,stock:5,tomatoes:730,chickpeas:730,guanciale:30,bacon:7,cumin:730,paprika:730,spice:365,default:14};
+function estimateExpiry(name){const l=name.toLowerCase();for(const[k,d]of Object.entries(SHELF_LIFE)){if(l.includes(k)){const dt=new Date();dt.setDate(dt.getDate()+d);return dt.toISOString().split("T")[0];}}const dt=new Date();dt.setDate(dt.getDate()+14);return dt.toISOString().split("T")[0];}
+function daysUntil(s){if(!s)return 999;return Math.ceil((new Date(s)-new Date())/86400000);}
+
+// ══════════════════════════════════
+// STATE
+// ══════════════════════════════════
+const S={get:k=>{try{return JSON.parse(localStorage.getItem("dk_"+k));}catch{return null;}},set:(k,v)=>localStorage.setItem("dk_"+k,JSON.stringify(v))};
+let pantry=S.get("pantry")||[];
+let scans=S.get("scans")||[];
+let budget=S.get("budget")||600;
+let bulkPantry=S.get("bulkPantry")||[
+  {id:"bp-salt",name:"Salt",qty:"Full",unit:"bulk"},
+  {id:"bp-pepper",name:"Black Pepper",qty:"Full",unit:"bulk"},
+  {id:"bp-oliveoil",name:"Olive Oil",qty:"Full",unit:"bulk"},
+  {id:"bp-neutraloil",name:"Neutral Oil",qty:"Full",unit:"bulk"},
+  {id:"bp-flour",name:"Plain Flour",qty:"Full",unit:"bulk"},
+  {id:"bp-sugar",name:"Sugar",qty:"Full",unit:"bulk"},
+];
+let cookedDays=S.get("cookedDays")||{};
+let selectedRecipes=new Set();
+let pFilter="all";
+let editId=null;
+let scanItems=[];
+let calMonth="may";
+let pendingRecipeId=null;
+let currentDayKey=null;
+let skippedMeals=S.get("skippedMeals")||{};
+let shopDays=7;
+
+// Staples always excluded from shopping list — water only; bulk items tracked separately
+const STAPLES=["water","pasta water","salt for","for boiling","for pasta"];
+function isStaple(ing){
+  const l=ing.toLowerCase();
+  return STAPLES.some(s=>l.startsWith(s)||l===s);
+}
+function isBulk(ing){
+  const l=ing.toLowerCase();
+  const bulkKeys=["salt","pepper","olive oil","neutral oil","plain flour","flour","sugar"];
+  return bulkKeys.some(k=>l.includes(k)&&!l.includes("brown sugar"));
+}
+
+// ══════════════════════════════════
+// NAV
+// ══════════════════════════════════
+function showPage(name,btn){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".ni").forEach(b=>b.classList.remove("active"));
+  document.getElementById("p-"+name).classList.add("active");
+  btn.classList.add("active");
+  if(name==="recipes")renderRecipes();
+  if(name==="calendar")renderCalendar();
+  if(name==="kitchen"){renderPantry();renderShopping();renderSpend();renderRecentScans();}
+}
+
+// ══════════════════════════════════
+// RECIPES
+// ══════════════════════════════════
+let rFilter="all";
+function filterRecipes(){
+  const q=document.getElementById("r-search").value.toLowerCase();
+  let vis=0;
+  document.querySelectorAll(".rc").forEach(c=>{
+    const cuisine=c.dataset.cuisine;
+    const text=(c.dataset.title+" "+c.dataset.tags).toLowerCase();
+    const mc=rFilter==="all"||cuisine===rFilter;
+    const mq=!q||text.includes(q)||cuisine.toLowerCase().includes(q);
+    c.style.display=(mc&&mq)?"":"none";
+    if(mc&&mq)vis++;
+  });
+  document.getElementById("r-count").textContent=vis===RECIPES.length?`${RECIPES.length} recipes across 7 cuisines`:`${vis} of ${RECIPES.length} recipes`;
+}
+function setRFilter(f,btn){
+  rFilter=f;
+  document.querySelectorAll("#r-chips .chip").forEach(c=>c.classList.remove("active"));
+  btn.classList.add("active");
+  filterRecipes();
+}
+function toggleRC(id){
+  const el=document.getElementById("rc-"+id);
+  el.classList.toggle("open");
+}
+function renderRecipes(){
+  const chips=document.getElementById("r-chips");
+  if(!chips.innerHTML){
+    const cuisines=["all",...Object.keys(CUISINE_ACCENT)];
+    chips.innerHTML=cuisines.map(c=>`<button class="chip${c==="all"?" active":""}" onclick="setRFilter('${c}',this)">${c==="all"?"All":c}</button>`).join("");
+  }
+  const grid=document.getElementById("r-grid");
+  grid.innerHTML=RECIPES.map(r=>{
+    const a=CUISINE_ACCENT[r.cuisine]||"#888";
+    const ings=r.ingredients.map(i=>`<li>${i}</li>`).join("");
+    const steps=r.steps.map((s,i)=>`<li class="step"><span class="snum">${i+1}</span><div class="stxt"><div class="st">${s.title}</div><div class="sd">${s.desc}</div>${s.time?`<div class="stm">⏱ ${s.time}</div>`:""}</div></li>`).join("");
+    const tips=r.tips.map(t=>`<p>${t}</p>`).join("");
+    const tags=r.tags.map(t=>`<span class="rtag">${t}</span>`).join("");
+    return`<div class="rc" id="rc-${r.id}" data-cuisine="${r.cuisine}" data-title="${r.title}" data-tags="${r.tags.join(" ")}">
+      <div class="rc-head" onclick="toggleRC(${r.id})">
+        <div class="rc-dot" style="background:${a}"></div>
+        <div class="rc-meta"><div class="rc-cuisine" style="color:${a}">${r.cuisine}</div><div class="rc-title">${r.title}</div><div class="rc-tags">${tags}</div></div>
+        <div class="rc-arr"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+      <div class="rc-body">
+        <div class="sl">Ingredients</div><ul class="ings">${ings}</ul>
+        <div class="divr"></div>
+        <div class="sl">Method</div><ul class="steps">${steps}</ul>
+        <div class="divr"></div>
+        <div class="sl">Technique Notes</div><div class="tips-box">${tips}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ══════════════════════════════════
+// CALENDAR
+// ══════════════════════════════════
+const CAL_MONTHS=["may","june"];
+const CAL_LABELS=["May 2026","June 2026"];
+const CAL_STARTS=[5,1]; // JS month index: May=4, June=5; day of week for May 1 = Friday=5, June 1=Monday=1
+// Actually calculate properly
+function getDayOfWeek(year,month1based,day){return new Date(year,month1based-1,day).getDay();}
+function getDaysInMonth(year,month1based){return new Date(year,month1based,0).getDate();}
+
+function calPrev(){const i=CAL_MONTHS.indexOf(calMonth);if(i>0){calMonth=CAL_MONTHS[i-1];renderCalendar();}}
+function calNext(){const i=CAL_MONTHS.indexOf(calMonth);if(i<CAL_MONTHS.length-1){calMonth=CAL_MONTHS[i+1];renderCalendar();}}
+
+function renderCalendar(){
+  const idx=CAL_MONTHS.indexOf(calMonth);
+  document.getElementById("cal-month-label").textContent=CAL_LABELS[idx];
+  const data=CALENDAR[calMonth];
+  const year=2026;
+  const month1=calMonth==="may"?5:6;
+  const totalDays=getDaysInMonth(year,month1);
+  const firstDow=getDayOfWeek(year,month1,1);
+  const startDay=calMonth==="may"?16:1;
+
+  // Legend
+  const leg=document.getElementById("cal-legend");
+  leg.innerHTML=Object.entries(CUISINE_ACCENT).map(([c,a])=>`<div class="leg-item"><div class="leg-dot" style="background:${a}"></div>${c}</div>`).join("")+
+    `<div class="leg-item"><div class="leg-dot" style="background:var(--gold)"></div>Prep</div>`;
+
+  // Day headers
+  const days=["Su","Mo","Tu","We","Th","Fr","Sa"];
+  const grid=document.getElementById("cal-grid");
+  let html=days.map(d=>`<div class="day-hdr">${d}</div>`).join("");
+
+  // Blank cells before month start
+  for(let i=0;i<firstDow;i++) html+=`<div class="day-cell empty-cell"></div>`;
+
+  for(let d=1;d<=totalDays;d++){
+    const dayData=data[d];
+    const isActive=d>=startDay&&dayData;
+    const isPast=d<startDay;
+    if(isPast||!isActive){
+      html+=`<div class="day-cell empty-cell" style="opacity:.08"><div class="day-num" style="font-size:.65rem;color:var(--muted)">${d}</div></div>`;
+      continue;
+    }
+    const cuisine=dayData.cuisine;
+    let bg="var(--surface2)";
+    let border="transparent";
+    let numColor="var(--text)";
+    if(cuisine==="PREP"){bg="rgba(212,168,83,.08)";border="rgba(212,168,83,.2)";}
+    else if(cuisine==="OUT"){bg="rgba(255,255,255,.03)";border="var(--border)";}
+    else if(CUISINE_BG[cuisine]){bg=CUISINE_BG[cuisine];border=CUISINE_ACCENT[cuisine]+"33";}
+    const accent=cuisine==="PREP"?"var(--gold)":cuisine==="OUT"?"var(--muted)":(CUISINE_ACCENT[cuisine]||"var(--muted)");
+    const label=dayData.entree.replace("PREP WEEKEND","PREP").replace("LIGHT PREP","LIGHT PREP");
+    const shortLabel=label.length>18?label.substring(0,17)+"…":label;
+    const isPrepHeavy=dayData.heavy;
+    const clickable=dayData.recipeId||cuisine==="PREP"||cuisine==="OUT";
+    html+=`<div class="day-cell${cuisine==="OUT"?" out-cell":""}" style="background:${bg};border-color:${border}" onclick="openDayModal(${d})">
+      ${isPrepHeavy?`<div class="heavy-dot" title="Heavy prep weekend"></div>`:""}
+      <div class="day-num" style="color:${accent}">${d}</div>
+      <div class="day-label" style="color:${cuisine==="OUT"?"var(--muted)":"var(--text)"}">${shortLabel}</div>
+      ${cuisine==="PREP"?`<div class="prep-badge">${dayData.heavy?"HEAVY":"LIGHT"}</div>`:""}
+    </div>`;
+  }
+  grid.innerHTML=html;
+}
+
+let currentDayData=null;
+function openDayModal(day){
+  const data=CALENDAR[calMonth][day];
+  if(!data)return;
+  currentDayData=data;
+  currentDayKey=calMonth+"-"+day;
+  const cuisine=data.cuisine;
+  const accent=cuisine==="PREP"?"var(--gold)":cuisine==="OUT"?"var(--muted)":(CUISINE_ACCENT[cuisine]||"var(--muted)");
+  document.getElementById("dd-cuisine").textContent=cuisine==="PREP"?"Prep Weekend":cuisine==="OUT"?"Travel":cuisine;
+  document.getElementById("dd-cuisine").style.color=accent;
+  document.getElementById("dd-title").textContent=data.entree;
+  document.getElementById("dd-note").textContent=data.note||"";
+  const btn=document.getElementById("dd-btn");
+  if(data.recipeId){btn.style.display="flex";btn.textContent="View Full Recipe →";}
+  else{btn.style.display="none";}
+  // Cooked button — only show for meals with a recipe, not prep/out
+  const cookedBtn=document.getElementById("dd-cooked-btn");
+  const cookedBadge=document.getElementById("dd-cooked-badge");
+  if(data.recipeId&&cuisine!=="PREP"&&cuisine!=="OUT"){
+    const alreadyCooked=cookedDays[currentDayKey];
+    cookedBtn.style.display=alreadyCooked?"none":"flex";
+    cookedBadge.style.display=alreadyCooked?"block":"none";
+  } else {
+    cookedBtn.style.display="none";
+    cookedBadge.style.display="none";
+  }
+  const wkEl=document.getElementById("dd-weekend");
+  if(data.weekend){wkEl.style.display="block";document.getElementById("dd-wk-txt").textContent=data.weekend;}
+  else{wkEl.style.display="none";}
+  // Skip button — show for any meal with a recipe
+  const skipBtn=document.getElementById("dd-skip-btn");
+  if(data.recipeId&&cuisine!=="PREP"&&cuisine!=="OUT"){
+    skipBtn.style.display="block";
+    const isSkipped=skippedMeals[currentDayKey];
+    skipBtn.textContent=isSkipped?"✓ Skipped — tap to re-add to shopping list":"Skip this meal — remove from shopping list";
+    skipBtn.className="dd-skip-btn"+(isSkipped?" skipped":"");
+  } else {
+    skipBtn.style.display="none";
+  }
+  document.getElementById("dd-modal").classList.add("open");
+}
+function closeDayModal(){document.getElementById("dd-modal").classList.remove("open");}
+function toggleSkipMeal(){
+  if(!currentDayKey)return;
+  skippedMeals[currentDayKey]=!skippedMeals[currentDayKey];
+  S.set("skippedMeals",skippedMeals);
+  const isSkipped=skippedMeals[currentDayKey];
+  const skipBtn=document.getElementById("dd-skip-btn");
+  skipBtn.textContent=isSkipped?"✓ Skipped — tap to re-add to shopping list":"Skip this meal — remove from shopping list";
+  skipBtn.className="dd-skip-btn"+(isSkipped?" skipped":"");
+  renderCalendar();
+  showToast(isSkipped?"Meal skipped — removed from shopping list":"Meal restored to shopping list");
+}
+function goToRecipe(){
+  if(!currentDayData||!currentDayData.recipeId)return;
+  closeDayModal();
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".ni").forEach(b=>b.classList.remove("active"));
+  document.getElementById("p-recipes").classList.add("active");
+  document.querySelector(".ni:first-child").classList.add("active");
+  renderRecipes();
+  setTimeout(()=>{
+    const el=document.getElementById("rc-"+currentDayData.recipeId);
+    if(el){el.classList.add("open");el.scrollIntoView({behavior:"smooth",block:"start"});}
+  },150);
+}
+
+// ══════════════════════════════════
+// KITCHEN
+// ══════════════════════════════════
+function setKTab(name,btn){
+  document.querySelectorAll(".ktab").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".ksection").forEach(s=>s.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("ks-"+name).classList.add("active");
+  if(name==="shopping")renderShopping();
+  if(name==="spend")renderSpend();
+  if(name==="scanner")renderRecentScans();
+}
+
+// PANTRY
+function setPFilter(f,btn){
+  pFilter=f;
+  document.querySelectorAll("#p-chips .chip").forEach(c=>c.classList.remove("active"));
+  btn.classList.add("active");
+  renderPantry();
+}
+function renderPantry(){
+  const items=pantry.filter(i=>pFilter==="all"||i.status===pFilter);
+  const expiring=pantry.filter(i=>{const d=daysUntil(i.expiry);return d>=0&&d<=4;});
+  const banner=document.getElementById("exp-banner");
+  if(expiring.length>0){banner.style.display="flex";document.getElementById("exp-list").textContent=expiring.map(i=>`${i.name} (${daysUntil(i.expiry)}d)`).join(" · ");}
+  else banner.style.display="none";
+  const inStock=pantry.filter(i=>i.status==="in").length;
+  document.getElementById("k-sub").textContent=`${inStock} of ${pantry.length} items in stock`;
+  const list=document.getElementById("pantry-list");
+  if(items.length===0){list.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><p>No items match this filter.<br>Scan a receipt to get started.</p></div>`;return;}
+  list.innerHTML=items.map(item=>{
+    const d=daysUntil(item.expiry);
+    const pct=item.expiry?Math.max(0,Math.min(100,(d/30)*100)):100;
+    const ec=d<3?"var(--red)":d<7?"var(--orange)":"var(--green)";
+    const bm={in:["b-in","In Stock"],low:["b-low","Low"],out:["b-out","Out"]};
+    const[bc,bt]=bm[item.status]||["b-out","?"];
+    const expTxt=item.expiry?(d<0?"Expired":d===0?"Today":d>60?"":d+"d left"):"";
+    return`<div class="pr" onclick="openEditModal('${item.id}')"><div class="pr-dot" style="background:${ec}"></div><div class="pr-info"><div class="pr-name">${item.name}</div><div class="pr-meta">${item.qty||""}${item.qty&&expTxt?" · ":""}${expTxt}</div>${item.expiry&&d<60?`<div class="exp-bar"><div class="exp-fill" style="width:${pct}%;background:${ec}"></div></div>`:""}</div><span class="pr-badge ${bc}">${bt}</span></div>`;
+  }).join("");
+}
+
+function openModal(id){document.getElementById(id).classList.add("open");}
+function closeModal(id){document.getElementById(id).classList.remove("open");}
+function openAdd(){document.getElementById("add-n").value="";document.getElementById("add-q").value="";document.getElementById("add-s").value="in";document.getElementById("add-e").value="";openModal("m-add");}
+function saveAdd(){
+  const name=document.getElementById("add-n").value.trim();
+  if(!name){showToast("Please enter a name");return;}
+  pantry.push({id:Date.now().toString(),name,qty:document.getElementById("add-q").value.trim(),status:document.getElementById("add-s").value,expiry:document.getElementById("add-e").value||estimateExpiry(name),addedAt:new Date().toISOString()});
+  S.set("pantry",pantry);closeModal("m-add");renderPantry();showToast("Added to pantry");
+}
+function openEditModal(id){
+  editId=id;const item=pantry.find(i=>i.id===id);if(!item)return;
+  document.getElementById("edit-n-title").textContent=item.name;
+  document.getElementById("edit-q").value=item.qty||"";
+  document.getElementById("edit-s").value=item.status;
+  document.getElementById("edit-e").value=item.expiry||"";
+  openModal("m-edit");
+}
+function saveEdit(){
+  const item=pantry.find(i=>i.id===editId);if(!item)return;
+  item.qty=document.getElementById("edit-q").value.trim();
+  item.status=document.getElementById("edit-s").value;
+  item.expiry=document.getElementById("edit-e").value;
+  S.set("pantry",pantry);closeModal("m-edit");renderPantry();showToast("Updated");
+}
+function deleteItem(){pantry=pantry.filter(i=>i.id!==editId);S.set("pantry",pantry);closeModal("m-edit");renderPantry();showToast("Removed");}
+
+// SHOPPING — auto-detect this week's meals from calendar
+// Date formatting helper
+function fmtDate(d){
+  const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return months[d.getMonth()]+" "+d.getDate();
+}
+
+// Get recipe IDs within the current shopDays window, excluding skipped meals
+function getWindowRecipeIds(days){
+  const now=new Date();
+  const end=new Date(now); end.setDate(end.getDate()+days);
+  const ids=new Map(); // recipeId -> {calKey, title}
+  for(const[mKey,mData]of Object.entries(CALENDAR)){
+    const baseMon=mKey==="may"?5:6;
+    for(const[day,data]of Object.entries(mData)){
+      const calKey=mKey+"-"+day;
+      if(skippedMeals[calKey]) continue; // skip skipped meals
+      const d=new Date(2026,baseMon-1,parseInt(day));
+      if(d>=now&&d<=end&&data.recipeId){
+        ids.set(data.recipeId,{calKey,title:data.entree});
+      }
+    }
+  }
+  return ids;
+}
+
+function updateShopSlider(){
+  const slider=document.getElementById("shop-days-slider");
+  shopDays=parseInt(slider.value);
+  const now=new Date();
+  const end=new Date(now); end.setDate(end.getDate()+shopDays);
+  document.getElementById("sl-days-label").textContent=shopDays+(shopDays===1?" day":" days");
+  document.getElementById("sl-date-range").textContent="Getting groceries for "+fmtDate(now)+" → "+fmtDate(end);
+  // Auto-update selected recipes from new window
+  const windowIds=getWindowRecipeIds(shopDays);
+  selectedRecipes=new Set(windowIds.keys());
+  renderShoppingPills();
+  renderShopList();
+}
+
+function renderShoppingPills(){
+  const windowIds=getWindowRecipeIds(shopDays);
+  const pills=document.getElementById("shop-pills");
+  pills.innerHTML=RECIPES.map(r=>{
+    const inWindow=windowIds.has(r.id);
+    const isSel=selectedRecipes.has(r.id);
+    const isSkipped=Object.entries(skippedMeals).some(([k,v])=>v&&CALENDAR[k.split('-')[0]]?.[k.split('-')[1]]?.recipeId===r.id);
+    return '<button class="rp'+(isSel?" sel":"")+(isSkipped?" skipped-pill":"")+'" onclick="toggleShopRecipe('+r.id+')" style="'+(isSkipped?"border-color:var(--red);color:var(--red);":"")+'">'+'<span class="dot" style="background:'+(CUISINE_ACCENT[r.cuisine]||"#888")+'"></span>'+r.title+(isSkipped?' <span style="font-size:.6rem">skip</span>':'')+'</button>';
+  }).join("");
+}
+
+function renderShopping(){
+  // Init slider label
+  const now=new Date();
+  const end=new Date(now); end.setDate(end.getDate()+shopDays);
+  document.getElementById("sl-days-label").textContent=shopDays+(shopDays===1?" day":" days");
+  document.getElementById("sl-date-range").textContent="Getting groceries for "+fmtDate(now)+" → "+fmtDate(end);
+  document.getElementById("shop-days-slider").value=shopDays;
+  // Auto-select recipes in window
+  if(selectedRecipes.size===0){
+    const windowIds=getWindowRecipeIds(shopDays);
+    selectedRecipes=new Set(windowIds.keys());
+  }
+  renderShoppingPills();
+  renderShopList();
+}
+function toggleShopRecipe(id){
+  selectedRecipes.has(id)?selectedRecipes.delete(id):selectedRecipes.add(id);
+  renderShoppingPills();
+  renderShopList();
+}
+function isCompoundIng(ing){
+  // Detect compound lines like "Toppings: diced tomato, lettuce, cheese"
+  return /^toppings?:|^condiments?:|^garnish:|^to serve:|^serve with:/i.test(ing.trim());
+}
+function expandCompoundIng(ing){
+  // Split "Toppings: diced tomato, lettuce, cheese" into individual items
+  const colonIdx=ing.indexOf(':');
+  if(colonIdx===-1) return [ing];
+  const parts=ing.substring(colonIdx+1).split(',').map(p=>p.trim()).filter(p=>p.length>0);
+  return parts.length>0?parts:[ing];
+}
+function normaliseIng(ing){
+  const lower=ing.toLowerCase();
+  const stripped=lower.replace(/^[\d\s½¼¾]*(g|kg|ml|l|tbsp?|tsp?|cups?|oz|lb|x|bunch|pinch|handful|cloves?|sprigs?|sticks?)[\s]*/i,'').replace(/^[\d½¼¾\.]+\s*/,'').trim();
+  const core=stripped.split(/[,(]/)[0].trim();
+  const skip=['and','for','the','from','with','just','very','into','each','only','about','dry','fresh','good','large','small','medium','diced','sliced','chopped','grated','shredded'];
+  const words=core.split(' ').filter(w=>w.length>2&&!skip.includes(w));
+  return words.length>0?words[words.length-1]:core;
+}
+function ingInPantry(ing){
+  const key=normaliseIng(ing);
+  return pantry.some(p=>p.status==="in"&&(p.name.toLowerCase().includes(key)||key.includes(p.name.toLowerCase().replace(/\s.*/,''))));
+}
+function renderShopList(){
+  const list=document.getElementById("shop-list");
+  const acts=document.getElementById("shop-actions");
+  if(selectedRecipes.size===0){
+    list.innerHTML='<div class="empty" style="padding:24px 16px"><p>Select recipes above to build your list.</p></div>';
+    acts.style.display="none";return;
+  }
+  const ingMap=new Map();
+  for(const id of selectedRecipes){
+    const r=RECIPES.find(x=>x.id===id);if(!r)continue;
+    for(const rawIng of r.ingredients){
+      if(isStaple(rawIng))continue;
+      // Expand compound ingredient lines (e.g. "Toppings: tomato, lettuce, cheese")
+      const isCompound=isCompoundIng(rawIng);
+      const ings=isCompound?expandCompoundIng(rawIng):[rawIng];
+      for(const ing of ings){
+        if(isStaple(ing))continue;
+        const key=normaliseIng(ing);
+        const displayName=ing;
+        if(!ingMap.has(key)){
+          ingMap.set(key,{name:displayName,key,recipes:[r.title],count:1,isBulkItem:isBulk(ing),isCompound});
+        } else {
+          const e=ingMap.get(key);
+          e.recipes.push(r.title);e.count++;
+          if(displayName.length<e.name.length)e.name=displayName;
+        }
+      }
+    }
+  }
+  const all=[...ingMap.values()];
+  const inP=all.filter(i=>ingInPantry(i.name));
+  const need=all.filter(i=>!ingInPantry(i.name));
+  let html="";
+  const needRegular=need.filter(i=>!i.isBulkItem);
+  const needBulk=need.filter(i=>i.isBulkItem);
+  if(needRegular.length>0){
+    html+='<div style="padding:8px 14px 4px;font-size:.62rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Need to Buy ('+needRegular.length+')</div>';
+    html+=needRegular.map((i,idx)=>{
+      const rNote=[...new Set(i.recipes)].join(', ');
+      const cNote=i.count>1?' <span style="color:var(--gold);font-weight:600">x'+i.count+' recipes</span>':'';
+      const safeName=i.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      const compoundTag=i.isCompound?'<span class="ing-compound">topping</span>':'';
+      return '<div class="si" id="si-'+idx+'"><div class="si-chk" onclick="checkShopItem(this,\''+safeName+'\',\''+i.key+'\','+idx+')"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="si-name">'+i.name+cNote+compoundTag+'</div><div class="si-sub">'+rNote+'</div></div></div>';
+    }).join("");
+  }
+  if(needBulk.length>0){
+    html+='<div style="padding:8px 14px 4px;font-size:.62rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--orange)">Check Bulk Stock ('+needBulk.length+')</div>';
+    html+=needBulk.map(i=>'<div class="si"><div class="si-chk" style="background:var(--orange-s);border-color:var(--orange);cursor:default;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="3"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div><div class="si-name">'+i.name+'</div><div class="si-sub" style="color:var(--orange);">Bulk item — check your stock level</div></div></div>').join("");
+  }
+  if(inP.length>0){
+    html+='<div style="padding:8px 14px 4px;font-size:.62rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--green)">Already in Pantry ('+inP.length+')</div>';
+    html+=inP.map(i=>'<div class="si chkd-row"><div class="si-chk chkd"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="si-name">'+i.name+'</div><div class="si-sub" style="color:var(--green)">In pantry checked | '+[...new Set(i.recipes)].join(', ')+'</div></div></div>').join("");
+  }
+  list.innerHTML=html;
+  acts.style.display=need.length>0?"block":"none";
+}
+function checkShopItem(el,name,key,idx){
+  const row=document.getElementById("si-"+idx);
+  const isChecking=!el.classList.contains("chkd");
+  el.classList.toggle("chkd");
+  row.classList.toggle("chkd-row");
+  if(isChecking){
+    const ex=pantry.find(p=>p.name.toLowerCase()===name.toLowerCase());
+    if(ex){ex.status="in";ex.addedAt=new Date().toISOString();ex.expiry=estimateExpiry(name);}
+    else pantry.push({id:Date.now().toString()+Math.random(),name,qty:"",status:"in",expiry:estimateExpiry(name),addedAt:new Date().toISOString()});
+    S.set("pantry",pantry);
+    showToast(name.split(' ').slice(0,3).join(' ')+" added to pantry");
+  } else {
+    const ex=pantry.find(p=>p.name.toLowerCase()===name.toLowerCase());
+    if(ex){ex.status="out";S.set("pantry",pantry);}
+  }
+}
+async function sendToReminders(){
+  const items=[...document.querySelectorAll(".si:not(.chkd-row) .si-name")].map(e=>e.textContent);
+  if(items.length===0){showToast("Nothing to add");return;}
+  const text=items.map(i=>"• "+i).join("\n");
+  try{await navigator.clipboard.writeText(text);showToast(`${items.length} items copied to clipboard`);}
+  catch{showToast("Use Share → Reminders to add");}
+}
+
+// SCANNER
+async function scanReceipt(event){
+  const file=event.target.files[0];if(!file)return;
+  showLoad("Reading receipt with Claude AI...");
+  try{
+    const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:file.type||"image/jpeg",data:b64}},{type:"text",text:`Scan this grocery receipt. Extract ALL food/kitchen items. Return ONLY valid JSON with no markdown:\n{"store":"name or Unknown","date":"YYYY-MM-DD","total":0.00,"items":[{"name":"clean readable name","price":0.00,"qty":"1"}]}`}]}]})});
+    const data=await resp.json();
+    hideLoad();
+    const text=data.content[0].text.replace(/```json|```/g,"").trim();
+    const parsed=JSON.parse(text);
+    scanItems=parsed.items||[];
+    renderScanResult(parsed);
+  }catch(e){hideLoad();showToast("Could not read receipt — try a clearer photo");console.error(e);}
+  event.target.value="";
+}
+function matchIng(name){
+  const l=name.toLowerCase();
+  return RECIPES.flatMap(r=>r.ingredients).find(i=>l.includes(i.toLowerCase().split(" ")[0])||i.toLowerCase().split(" ")[0].includes(l.split(" ")[0]));
+}
+function renderScanResult(parsed){
+  document.getElementById("scan-result").style.display="block";
+  const matched=scanItems.filter(i=>matchIng(i.name));
+  document.getElementById("scan-sum").textContent=`${matched.length} matched · ${scanItems.length-matched.length} other · ${parsed.store||"Unknown"}`;
+  document.getElementById("scan-tot").textContent=parsed.total?`$${Number(parsed.total).toFixed(2)}`:"";
+  document.getElementById("scan-items").innerHTML=scanItems.map((item,idx)=>{
+    const m=!!matchIng(item.name);
+    return`<div class="ri"><div class="ri-chk ${m?"m":"u"}" id="rc-${idx}" onclick="this.classList.toggle('m');this.classList.toggle('u')"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="ri-info"><div class="ri-n">${item.name}</div><div class="ri-s">${m?"✓ Matches recipe ingredient":"— Other item"}</div></div><div class="ri-p">${item.price?"$"+Number(item.price).toFixed(2):""}</div></div>`;
+  }).join("");
+  window._scan=parsed;
+}
+function confirmScan(){
+  const checked=scanItems.filter((_,i)=>document.getElementById("rc-"+i)?.classList.contains("m"));
+  const total=scanItems.reduce((s,i)=>s+Number(i.price||0),0);
+  for(const item of checked){
+    const ex=pantry.find(p=>p.name.toLowerCase()===item.name.toLowerCase());
+    if(ex){ex.status="in";ex.expiry=estimateExpiry(item.name);ex.addedAt=new Date().toISOString();}
+    else pantry.push({id:Date.now().toString()+Math.random(),name:item.name,qty:item.qty?.toString()||"1",status:"in",expiry:estimateExpiry(item.name),addedAt:new Date().toISOString(),price:item.price});
+  }
+  scans.push({id:Date.now().toString(),store:window._scan?.store||"Unknown",date:window._scan?.date||new Date().toISOString().split("T")[0],total,itemCount:scanItems.length,addedCount:checked.length});
+  S.set("pantry",pantry);S.set("scans",scans);
+  clearScan();renderPantry();renderRecentScans();renderSpend();showToast(`${checked.length} items added to pantry`);
+}
+function clearScan(){document.getElementById("scan-result").style.display="none";document.getElementById("scan-items").innerHTML="";scanItems=[];window._scan=null;}
+function renderRecentScans(){
+  const el=document.getElementById("recent-scans");
+  if(scans.length===0){el.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/></svg><p>No scans yet.</p></div>`;return;}
+  el.innerHTML=`<div class="kcard">`+[...scans].reverse().slice(0,5).map(s=>`<div class="hist-row"><div style="flex:1"><div style="font-size:.86rem;font-weight:500">${s.store}</div><div style="font-size:.7rem;color:var(--soft)">${s.date} · ${s.addedCount} items added</div></div><div style="font-family:'DM Mono',monospace;font-size:.88rem;color:var(--gold)">$${s.total.toFixed(2)}</div></div>`).join("")+`</div>`;
+}
+
+// SPEND
+function renderSpend(){
+  const now=new Date();
+  const ms=scans.filter(s=>{const d=new Date(s.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();});
+  const total=ms.reduce((s,x)=>s+x.total,0);
+  const pct=Math.min(100,total/budget*100);
+  const circ=169.6;
+  document.getElementById("spend-ring").style.strokeDashoffset=circ-(circ*pct/100);
+  document.getElementById("ring-amt").textContent="$"+total.toFixed(0);
+  document.getElementById("sp-t").textContent=`$${total.toFixed(2)} of $${budget} budget`;
+  document.getElementById("sp-s").textContent=`${ms.length} trip${ms.length!==1?"s":""} this month`;
+  const hist=document.getElementById("spend-hist");
+  if(scans.length===0){hist.innerHTML=`<div class="empty" style="padding:24px"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><p>No spending logged yet.<br>Scan a receipt to track.</p></div>`;return;}
+  const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const byM={};
+  for(const s of scans){const d=new Date(s.date);const k=`${d.getFullYear()}-${d.getMonth()}`;const lb=`${months[d.getMonth()]} ${d.getFullYear()}`;if(!byM[k])byM[k]={label:lb,total:0,trips:0};byM[k].total+=s.total;byM[k].trips++;}
+  hist.innerHTML=`<div>`+Object.values(byM).reverse().map(m=>`<div class="hist-row"><div style="flex:1"><div style="font-size:.86rem;font-weight:500">${m.label}</div><div style="font-size:.7rem;color:var(--soft)">${m.trips} trip${m.trips!==1?"s":""}</div></div><div style="font-family:'DM Mono',monospace;font-size:.88rem;color:var(--gold)">$${m.total.toFixed(2)}</div></div>`).join("")+`</div>`;
+}
+function saveBudget(){const v=parseFloat(document.getElementById("bgt-i").value);if(isNaN(v)||v<=0){showToast("Enter a valid amount");return;}budget=v;S.set("budget",budget);closeModal("m-budget");renderSpend();showToast("Budget updated");}
+
+// UTILS
+function showLoad(t){document.getElementById("load-t").textContent=t||"Loading...";document.getElementById("loading").classList.add("show");}
+function hideLoad(){document.getElementById("loading").classList.remove("show");}
+function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
+
+
+
+// COOKED CONFIRMATION
+function getUpcomingRecipeIds(){
+  // Get all recipe IDs planned for the next 7 days
+  const now=new Date();
+  const ids=new Set();
+  for(const[mKey,mData]of Object.entries(CALENDAR)){
+    const baseMon=mKey==="may"?5:6;
+    for(const[day,data]of Object.entries(mData)){
+      const d=new Date(2026,baseMon-1,parseInt(day));
+      const diff=(d-now)/86400000;
+      if(diff>0&&diff<=7&&data.recipeId) ids.add(data.recipeId);
+    }
+  }
+  return ids;
+}
+function openCookedConfirm(){
+  if(!currentDayData||!currentDayData.recipeId)return;
+  const recipe=RECIPES.find(r=>r.id===currentDayData.recipeId);
+  if(!recipe)return;
+  document.getElementById("cooked-recipe-name").textContent=recipe.title+" — "+currentDayData.entree;
+  const upcoming=getUpcomingRecipeIds();
+  // Build list of pantry-matched ingredients and what will happen to them
+  const changes=[];
+  for(const ing of recipe.ingredients){
+    if(isStaple(ing)||isBulk(ing))continue;
+    const key=normaliseIng(ing);
+    const pantryItem=pantry.find(p=>p.status==="in"&&(p.name.toLowerCase().includes(key)||key.includes(p.name.toLowerCase().replace(/\s.*/,''))));
+    if(!pantryItem)continue;
+    // Check if this ingredient is also needed in upcoming recipes
+    const neededUpcoming=RECIPES
+      .filter(r=>upcoming.has(r.id)&&r.id!==recipe.id)
+      .some(r=>r.ingredients.some(i=>normaliseIng(i)===key));
+    changes.push({ing:ing,item:pantryItem,neededUpcoming,newStatus:neededUpcoming?"low":"out"});
+  }
+  const listEl=document.getElementById("cooked-ing-list");
+  if(changes.length===0){
+    listEl.innerHTML='<div style="font-size:.78rem;color:var(--soft);padding:8px 0;">No tracked pantry items found for this recipe — pantry may already be up to date.</div>';
+    document.getElementById("cooked-smart-note").textContent="";
+  } else {
+    listEl.innerHTML=changes.map(c=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:.82rem;font-weight:500;">${c.item.name}</div>
+          <div style="font-size:.68rem;color:var(--soft);">${c.ing}</div>
+        </div>
+        <span class="pr-badge ${c.newStatus==="low"?"b-low":"b-out"}">${c.newStatus==="low"?"→ Low":"→ Out"}</span>
+      </div>`).join("");
+    const lowCount=changes.filter(c=>c.newStatus==="low").length;
+    const outCount=changes.filter(c=>c.newStatus==="out").length;
+    let note="";
+    if(lowCount>0) note+=lowCount+" item"+(lowCount>1?"s":"")+" marked Low because they're also needed in upcoming recipes. ";
+    if(outCount>0) note+=outCount+" item"+(outCount>1?"s":"")+" marked Out as they're not needed again this week.";
+    document.getElementById("cooked-smart-note").textContent=note;
+  }
+  // Store changes for confirm step
+  window._pendingCookedChanges=changes;
+  closeModal('m-cooked');
+  openModal('m-cooked');
+}
+function confirmCooked(){
+  const changes=window._pendingCookedChanges||[];
+  for(const c of changes){
+    const item=pantry.find(p=>p.id===c.item.id);
+    if(item) item.status=c.newStatus;
+  }
+  cookedDays[currentDayKey]=true;
+  S.set("pantry",pantry);
+  S.set("cookedDays",cookedDays);
+  closeModal('m-cooked');
+  // Update the day modal UI
+  document.getElementById("dd-cooked-btn").style.display="none";
+  document.getElementById("dd-cooked-badge").style.display="block";
+  // Re-render calendar to show cooked indicator
+  renderCalendar();
+  showToast("Marked as cooked — pantry updated");
+}
+// PRINT
+function printCal(){
+  const idx=CAL_MONTHS.indexOf(calMonth);
+  const sub=document.getElementById('print-hdr-sub');
+  if(sub) sub.textContent=CAL_LABELS[idx]+' · Ingredient-Optimized Rotation · No garlic · No cilantro · Dairy spread out';
+  window.print();
+}
+
+// SERVICE WORKER — offline caching
+if('serviceWorker' in navigator){
+  const SW_SRC = `
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open('dk-v1').then(c => c.addAll([location.pathname || '/']))
+  );
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys =>
+    Promise.all(keys.filter(k => k !== 'dk-v1').map(k => caches.delete(k)))
+  ));
+  self.clients.claim();
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      const fresh = fetch(e.request).then(resp => {
+        if(resp && resp.status === 200 && resp.type === 'basic'){
+          const clone = resp.clone();
+          caches.open('dk-v1').then(c => c.put(e.request, clone));
+        }
+        return resp;
+      }).catch(() => cached);
+      return cached || fresh;
+    })
+  );
+});
+`;
+  const blob = new Blob([SW_SRC], {type:'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
+}
+
+
+// THEME TOGGLE
+function toggleTheme(){
+  const isLight=document.body.classList.toggle("light");
+  S.set("theme", isLight?"light":"dark");
+  updateThemeIcon(isLight);
+}
+function updateThemeIcon(isLight){
+  const icon=document.getElementById("theme-icon");
+  if(!icon)return;
+  if(isLight){
+    // Moon icon for switching to dark
+    icon.innerHTML='<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+  } else {
+    // Sun icon for switching to light
+    icon.innerHTML='<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  }
+}
+// INIT
+// Apply saved theme
+const savedTheme=S.get("theme");
+if(savedTheme==="light"){document.body.classList.add("light");updateThemeIcon(true);}
+renderRecipes();
+renderCalendar();
+</script>
+</body>
+</html>
